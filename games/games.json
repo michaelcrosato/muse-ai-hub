@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "updated": "2026-10-03",
+  "games": [
+    {
+      "id": "corehaul",
+      "title": "COREHAUL: Meltdown Mile",
+      "file": "blastcorps-corehaul-20261001-musespark.html",
+      "description": "Haul the volatile core across Meltdown Mile. Clear a path through the city before the payload blows.",
+      "tags": ["clearance-racer", "driving"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "dead-mans-haul",
+      "title": "Fallout Crew: Dead Man's Haul — Easy Street",
+      "file": "blastcorps-dead-mans-haul-20261001-muse-spark.html",
+      "description": "A full-crew demolition run down Easy Street. Smash, clear, and escort the haul through hostile blocks.",
+      "tags": ["demolition", "driving"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "demolition-duty",
+      "title": "Demolition Duty: Meltdown Mile",
+      "file": "blastcorps-demolition-duty-20261001-musespark.html",
+      "description": "Clock in for demolition duty. Flatten everything between the reactor and the evac line.",
+      "tags": ["demolition", "clearance-racer"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "meltdown-express",
+      "title": "Meltdown Express — Harbor Break",
+      "file": "blastcorps-meltdownexpress-20261001-musespark.html",
+      "description": "The Express is coming through the harbor whether the harbor likes it or not. Break the line open.",
+      "tags": ["clearance-racer", "driving"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "meltdown-mile-2",
+      "title": "Meltdown Mile 2",
+      "file": "blastcorps-meltdownmile-2-20261001-musespark.html",
+      "description": "Second run at the Mile, rebuilt as a WebGL2 clearance racer. Faster rigs, denser blocks.",
+      "tags": ["clearance-racer", "webgl"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "meltdown-mile",
+      "title": "Meltdown Mile",
+      "file": "blastcorps-meltdownmile-20261001-musespark.html",
+      "description": "The original run. A Blast Corps spiritual successor: clear the convoy's path before meltdown.",
+      "tags": ["clearance-racer", "driving"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "rumbleline",
+      "title": "Rumbleline",
+      "file": "blastcorps-rumbleline-20261001-musespark.html",
+      "description": "Clear the line. Save the convoy. A tight, fast clearance run built for repeat attempts.",
+      "tags": ["clearance-racer", "arcade"],
+      "added": "2026-10-01",
+      "controls": "Arrows / WASD + Space",
+      "engine": "Muse Spark"
+    }
+  ]
+}

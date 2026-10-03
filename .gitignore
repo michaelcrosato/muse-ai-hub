@@ -1,0 +1,10 @@
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*Zone.Identifier
+*.swp
+*.swo
+
+# Deps / tooling
+node_modules/
+.vercel/

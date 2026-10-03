@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COREHAUL: Meltdown Mile — a Blast Corps-inspired vertical slice</title>
+<style>
+  :root{
+    --amber:#ffa02e; --amber-dim:#b96a12; --red:#ff4b33; --green:#7dff6a;
+    --panel:rgba(12,14,16,.82); --line:#2c3136;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b0d0f;
+    font-family:Verdana,Geneva,"DejaVu Sans",sans-serif;color:#e8e4da;
+    -webkit-user-select:none;user-select:none}
+  #game{position:fixed;inset:0}
+  canvas.webgl{display:block;width:100%;height:100%}
+  .hud{position:fixed;z-index:10;pointer-events:none}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;
+    box-shadow:0 2px 14px rgba(0,0,0,.5)}
+  /* top-left status */
+  #status{top:12px;left:12px;padding:10px 12px;min-width:288px}
+  #status .row{display:flex;align-items:center;gap:8px;margin:3px 0}
+  #status .lbl{font-size:11px;letter-spacing:.08em;color:#b9b2a4;width:86px;flex:none}
+  .bar{flex:1;height:12px;background:#22262b;border-radius:3px;overflow:hidden;position:relative}
+  .bar>i{display:block;height:100%;width:100%;border-radius:3px;
+    background:linear-gradient(180deg,#ffd27a,#ff9a1f);transition:width .18s}
+  #hullbar>i{background:linear-gradient(180deg,#ff8a70,#e23a24)}
+  #hullbar.low>i{animation:blink .5s steps(2) infinite}
+  @keyframes blink{50%{filter:brightness(1.7)}}
+  #status .val{font-size:12px;font-weight:bold;min-width:52px;text-align:right;
+    font-variant-numeric:tabular-nums}
+  #obj{margin-top:7px;padding-top:7px;border-top:1px solid var(--line);
+    font-size:11px;line-height:1.5;color:#cfc8b8}
+  #obj b{color:var(--amber)}
+  /* minimap */
+  #mapwrap{top:12px;right:12px;padding:8px;text-align:center}
+  #minimap{display:block;width:172px;height:236px;background:#14181c;border-radius:4px}
+  #mapwrap .cap{font-size:10px;letter-spacing:.12em;color:#b9b2a4;margin-top:5px}
+  /* vehicle card */
+  #veh{left:12px;bottom:12px;padding:10px 12px;min-width:250px}
+  #vehname{font-family:"Arial Black",Verdana,sans-serif;font-size:17px;letter-spacing:.02em;
+    color:#fff}
+  #vehname small{font-family:Verdana,sans-serif;font-size:10px;color:var(--amber);
+    letter-spacing:.14em;display:block;margin-bottom:2px}
+  #vehstats{display:flex;gap:14px;margin-top:6px;font-size:11px;color:#cfc8b8}
+  #vehstats b{color:#fff;font-size:13px;font-variant-numeric:tabular-nums}
+  #speedo{font-size:11px;color:#b9b2a4;margin-top:6px}
+  #speedo b{font-size:22px;color:#fff;font-variant-numeric:tabular-nums}
+  #swapmsg{font-size:11px;color:var(--green);margin-top:5px;min-height:15px}
+  /* message feed + banner */
+  #feed{top:12px;left:50%;transform:translateX(-50%);width:min(520px,60vw);text-align:center}
+  #banner{font-family:"Arial Black",Verdana,sans-serif;font-size:26px;color:#fff;
+    text-shadow:0 2px 0 #000,0 0 22px rgba(255,160,46,.55);letter-spacing:.04em;
+    opacity:0;transition:opacity .25s}
+  #banner.show{opacity:1}
+  #banner.red{color:#ffb0a3;text-shadow:0 2px 0 #000,0 0 24px rgba(255,60,30,.8)}
+  #tip{margin-top:6px;font-size:13px;color:#ffe1b8;background:rgba(12,14,16,.75);
+    display:inline-block;padding:5px 14px;border-radius:20px;border:1px solid #4a3a22;
+    opacity:0;transition:opacity .3s}
+  #tip.show{opacity:1}
+  #alarm{margin-top:6px;font-size:13px;font-weight:bold;color:#fff;background:#a01808;
+    display:none;padding:5px 16px;border-radius:4px;border:1px solid #ff6a50;
+    animation:blink .4s steps(2) infinite}
+  #alarm.show{display:inline-block}
+  /* controls hint */
+  #keys{right:12px;bottom:12px;padding:8px 11px;font-size:10.5px;line-height:1.75;color:#b9b2a4}
+  #keys b{color:#fff;background:#262b30;border:1px solid #3d434a;border-radius:3px;
+    padding:0 5px;font-family:Consolas,monospace;font-size:10px}
+  /* damage vignette */
+  #vig{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,transparent 52%,rgba(200,20,5,.55) 100%)}
+  /* screens */
+  .screen{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+    background:rgba(5,6,7,.72)}
+  .screen.hidden{display:none}
+  .card{background:#101315;border:1px solid #3a3f45;border-radius:10px;max-width:640px;
+    width:min(640px,92vw);max-height:92vh;overflow:auto;padding:28px 32px;position:relative}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:8px;border-radius:10px 10px 0 0;
+    background:repeating-linear-gradient(-45deg,#ffa02e 0 18px,#151312 18px 36px)}
+  .card h1{font-family:"Arial Black",Verdana,sans-serif;font-size:40px;color:#fff;
+    letter-spacing:.01em;margin:6px 0 2px}
+  .card h1 span{color:var(--amber)}
+  .card h2{font-family:"Arial Black",Verdana,sans-serif;font-size:30px;color:#fff;margin:6px 0 8px}
+  .sub{font-size:12px;letter-spacing:.3em;color:var(--amber);font-weight:bold}
+  .story{font-size:13.5px;line-height:1.65;color:#d8d2c4;margin:12px 0}
+  .story b{color:#fff}
+  .ctrls{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;font-size:12px;
+    color:#cfc8b8;margin:12px 0;padding:10px 12px;background:#0b0d0f;border-radius:6px;
+    border:1px solid var(--line)}
+  .ctrls b{color:#fff;background:#262b30;border:1px solid #3d434a;border-radius:3px;
+    padding:0 6px;font-family:Consolas,monospace;font-size:11px;margin-right:6px}
+  .btn{pointer-events:auto;cursor:pointer;display:inline-block;margin-top:14px;
+    font-family:"Arial Black",Verdana,sans-serif;font-size:18px;letter-spacing:.05em;
+    color:#14100a;background:linear-gradient(180deg,#ffc46a,#ff9a1f);border:none;border-radius:6px;
+    padding:13px 38px;box-shadow:0 4px 0 #8a4d0c,0 6px 18px rgba(255,160,46,.35)}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a4d0c}
+  .btn.ghost{background:#22262b;color:#e8e4da;box-shadow:none;border:1px solid #4a5058;
+    font-size:14px;padding:10px 24px}
+  .statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0}
+  .stat{background:#0b0d0f;border:1px solid var(--line);border-radius:6px;padding:10px;text-align:center}
+  .stat .n{font-family:"Arial Black",Verdana,sans-serif;font-size:24px;color:var(--amber)}
+  .stat .t{font-size:10px;letter-spacing:.1em;color:#b9b2a4}
+  #pausescreen .card,#winscreen .card,#losescreen .card{text-align:center}
+  .tiny{font-size:11px;color:#8d8779;margin-top:10px}
+  #loading{font-size:13px;color:#ffe1b8;margin-top:14px}
+  #count{position:fixed;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;font-family:"Arial Black",Verdana,sans-serif;font-size:120px;color:#fff;
+    text-shadow:0 4px 0 #000,0 0 60px rgba(255,160,46,.8);opacity:0}
+  #count.pop{animation:pop .9s ease-out}
+  @keyframes pop{0%{opacity:0;transform:scale(1.6)}20%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+  @media (max-width:900px){ #keys{display:none} #status{min-width:220px} }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="game"></div>
+<div id="vig"></div>
+
+<div id="status" class="hud panel">
+  <div class="row"><span class="lbl">RIG HULL</span><div class="bar" id="hullbar"><i></i></div><span class="val" id="hullval">100%</span></div>
+  <div class="row"><span class="lbl">DISTANCE</span><div class="bar" id="distbar"><i></i></div><span class="val" id="distval">0 m</span></div>
+  <div class="row"><span class="lbl">CLEARED</span><div class="bar" id="clrbar"><i></i></div><span class="val" id="clrval">0%</span></div>
+  <div id="obj">Escort the <b>Cinder Rig</b> to containment. Smash or blast everything in the <b>marked lane</b> before it arrives.</div>
+</div>
+
+<div id="mapwrap" class="hud panel"><canvas id="minimap" width="172" height="236"></canvas><div class="cap">MELTDOWN MILE · ROUTE</div></div>
+
+<div id="veh" class="hud panel">
+  <div id="vehname"><small>ACTIVE UNIT</small>HORNBACK</div>
+  <div id="vehstats"><span>RAM <b id="st-ram">★★★</b></span><span>SPEED <b id="st-spd">★★☆</b></span><span>LOAD <b id="st-load">0/3</b></span></div>
+  <div id="speedo"><b id="spd">0</b> km/h · <span id="gear">DRIVE</span></div>
+  <div id="swapmsg"></div>
+</div>
+
+<div id="feed" class="hud"><div id="banner"></div><div id="tip"></div><br><div id="alarm">⚠ RIG BLOCKED — CLEAR THE LANE ⚠</div></div>
+
+<div id="keys" class="hud panel">
+  <b>W A S D</b> drive · <b>Space</b> handbrake<br>
+  <b>E</b> swap unit · <b>F</b> dump rubble<br>
+  <b>R</b> recover · <b>C</b> camera · <b>M</b> mute · <b>P</b> pause
+</div>
+
+<div id="count"></div>
+
+<div id="titlescreen" class="screen"><div class="card">
+  <div class="sub">COREHAUL · MELTDOWN MILE · VERTICAL SLICE</div>
+  <h1>CORE<span>HAUL</span></h1>
+  <div class="story">The <b>Cinder Rig's</b> reactor clamp has failed. It is rolling itself down
+  Meltdown Mile to the containment cradle — and it <b>cannot stop or steer</b>.
+  You are the Haulbreaker crew: ram, crush and blast a path through anything in the
+  <b>marked lane</b>, bridge the collapsed culvert with the <b>MULE</b>, and get that rig home
+  before its hull gives out.</div>
+  <div class="ctrls">
+    <span><b>W/S</b>throttle / brake</span><span><b>A/D</b>steer</span>
+    <span><b>Space</b>handbrake</span><span><b>E</b>swap to nearby unit</span>
+    <span><b>F</b>dump rubble (MULE)</span><span><b>R</b>recover unit</span>
+    <span><b>C</b>camera far/near</span><span><b>P</b>pause · <b>M</b> mute</span>
+  </div>
+  <div class="story" style="margin-top:0">Three units: <b>HORNBACK</b> wedge dozer (ram), <b>MULE</b> tipper (hauls rubble),
+  <b>DART</b> scout (fast). Blue <b>surge cells</b> explode — handy, but they can wound the rig too.</div>
+  <button class="btn" id="startbtn">START ENGINE</button>
+  <div id="loading">warming up…</div>
+  <div class="tiny">Best in latest Chrome · keyboard required · sound on recommended</div>
+</div></div>
+
+<div id="pausescreen" class="screen hidden"><div class="card">
+  <div class="sub">PAUSED</div><h2>TAKING FIVE</h2>
+  <div class="story">The rig is holding. Stretch, then get back out there.</div>
+  <button class="btn" id="resumebtn">RESUME</button><br>
+  <button class="btn ghost" id="restartbtn1">RESTART RUN</button>
+</div></div>
+
+<div id="winscreen" class="screen hidden"><div class="card">
+  <div class="sub">RIG DELIVERED</div><h2>CONTAINED ✓</h2>
+  <div class="story" id="wintext"></div>
+  <div class="statgrid"><div class="stat"><div class="n" id="w-time">0:00</div><div class="t">RUN TIME</div></div>
+  <div class="stat"><div class="n" id="w-clear">0%</div><div class="t">LANE CLEARED</div></div>
+  <div class="stat"><div class="n" id="w-score">0</div><div class="t">SCORE</div></div></div>
+  <button class="btn" id="restartbtn2">RUN IT AGAIN</button>
+</div></div>
+
+<div id="losescreen" class="screen hidden"><div class="card">
+  <div class="sub" style="color:#ff6a50">RIG LOST</div><h2 id="losetitle">HULL BREACH</h2>
+  <div class="story" id="losetext"></div>
+  <div class="statgrid"><div class="stat"><div class="n" id="l-dist">0 m</div><div class="t">DISTANCE</div></div>
+  <div class="stat"><div class="n" id="l-clear">0%</div><div class="t">LANE CLEARED</div></div>
+  <div class="stat"><div class="n" id="l-score">0</div><div class="t">SCORE</div></div></div>
+  <button class="btn" id="restartbtn3">TRY AGAIN</button>
+</div></div>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================
+   COREHAUL: MELTDOWN MILE — original spiritual successor to
+   Blast Corps (N64). Single-file vertical slice.
+   Clear the lane for the runaway Cinder Rig. Ram, blast,
+   bridge the culvert, deliver the rig.
+   ============================================================ */
+
+const CFG = {
+  laneHalf: 7,          // half-width of the marked lane (rig path)
+  boundX: 46,           // drivable half-width
+  startZ: 30, finishZ: -560,
+  rigSpeed: 5.6, rigHoldTime: 7.0,
+  rigHull: 100, blockDps: 4.0, blockHit: 5,
+  fillNeeded: 3,
+  fixed: 1/60,
+};
+const Z0 = 10; // rig spawn z
+
+// ---------- tiny helpers ----------
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const $=id=>document.getElementById(id);
+function fmtTime(s){ s=Math.max(0,s|0); return `${(s/60)|0}:${String(s%60).padStart(2,'0')}`; }
+
+// ---------- input ----------
+const keys={};
+addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  if(!keys[e.code]) keys[e.code]=true, onKeyPress(e.code);
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+function onKeyPress(code){
+  if(code==='KeyM'){ Audio2.toggle(); }
+  if(code==='KeyC'){ camFar=!camFar; }
+  if(code==='KeyP'||code==='Escape'){ togglePause(); }
+  if(state==='play'){
+    if(code==='KeyE') trySwap();
+    if(code==='KeyF') tryDump();
+    if(code==='KeyR') recoverActive();
+  }
+  if((state==='title')&&(code==='Enter'||code==='Space')) startRun();
+  if((state==='win'||state==='lose')&&code==='Enter') restart();
+}
+const K=(...c)=>c.some(x=>keys[x]);
+function driveInput(){
+  return {
+    th:(K('KeyW','ArrowUp')?1:0)-(K('KeyS','ArrowDown')?1:0),
+    st:(K('KeyD','ArrowRight')?1:0)-(K('KeyA','ArrowLeft')?1:0),
+    hb:!!K('Space'),
+  };
+}
+
+// ---------- procedural audio (no assets) ----------
+const Audio2=(()=>{
+  let ctx=null, master=null, engOsc=null, engOsc2=null, engGain=null, engFilter=null,
+      skidSrc=null, skidGain=null, muted=false, alarmT=0;
+  function ensure(){
+    if(ctx||muted&&false) return true;
+    try{
+      ctx=new (window.AudioContext||window.webkitAudioContext)();
+      master=ctx.createGain(); master.gain.value=0.55; master.connect(ctx.destination);
+      // engine: detuned saws through lowpass
+      engOsc=ctx.createOscillator(); engOsc.type='sawtooth'; engOsc.frequency.value=55;
+      engOsc2=ctx.createOscillator(); engOsc2.type='square'; engOsc2.frequency.value=27;
+      engFilter=ctx.createBiquadFilter(); engFilter.type='lowpass'; engFilter.frequency.value=320; engFilter.Q.value=2;
+      engGain=ctx.createGain(); engGain.gain.value=0;
+      engOsc.connect(engFilter); engOsc2.connect(engFilter);
+      engFilter.connect(engGain); engGain.connect(master);
+      engOsc.start(); engOsc2.start();
+      // skid: looped noise through bandpass
+      const nb=noiseBuffer(1.2);
+      skidSrc=ctx.createBufferSource(); skidSrc.buffer=nb; skidSrc.loop=true;
+      const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=900; bp.Q.value=1.4;
+      skidGain=ctx.createGain(); skidGain.gain.value=0;
+      skidSrc.connect(bp); bp.connect(skidGain); skidGain.connect(master); skidSrc.start();
+    }catch(e){ ctx=null; }
+    return !!ctx;
+  }
+  function noiseBuffer(sec){
+    const b=ctx.createBuffer(1,ctx.sampleRate*sec,ctx.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    return b;
+  }
+  function burst(dur,freq,type='lowpass',vol=0.5,slideTo=null,delay=0){
+    if(!ensure()||muted) return;
+    const t=ctx.currentTime+delay;
+    const s=ctx.createBufferSource(); s.buffer=noiseBuffer(dur+0.05);
+    const f=ctx.createBiquadFilter(); f.type=type; f.frequency.setValueAtTime(freq,t);
+    if(slideTo) f.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),t+dur);
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t+dur+0.05);
+  }
+  function tone(freq,dur,type='sine',vol=0.3,slideTo=null,delay=0){
+    if(!ensure()||muted) return;
+    const t=ctx.currentTime+delay;
+    const o=ctx.createOscillator(); o.type=type; o.frequency.setValueAtTime(freq,t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(Math.max(15,slideTo),t+dur);
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.05);
+  }
+  return {
+    unlock(){ ensure(); if(ctx&&ctx.state==='suspended') ctx.resume(); },
+    toggle(){ muted=!muted; if(master) master.gain.value=muted?0:0.55; tip(muted?'Sound OFF (M to re-enable)':'Sound ON'); },
+    engine(speedRatio, throttle, on){
+      if(!ctx||muted) return;
+      const t=ctx.currentTime, r=clamp(Math.abs(speedRatio),0,1.3);
+      const f=50+r*130+(throttle>0?14:0);
+      engOsc.frequency.setTargetAtTime(f,t,0.06);
+      engOsc2.frequency.setTargetAtTime(f*0.5+3,t,0.06);
+      engFilter.frequency.setTargetAtTime(240+r*900,t,0.08);
+      engGain.gain.setTargetAtTime(on?0.055+r*0.05:0,t,0.09);
+    },
+    skid(amount){
+      if(!ctx||muted) return;
+      skidGain.gain.setTargetAtTime(clamp(amount,0,1)*0.16,ctx.currentTime,0.05);
+    },
+    crash(hard){ burst(0.28,hard?900:500,'lowpass',hard?0.7:0.4,120); tone(hard?90:70,0.25,'sine',0.4,32); },
+    crumble(){ burst(0.7,420,'lowpass',0.5,90); },
+    explosion(big=1){
+      burst(1.1*big,1400,'lowpass',0.9,60);
+      tone(120,0.9*big,'sine',0.8,26);
+      tone(1600,0.18,'sawtooth',0.12,200);
+    },
+    beep(){ tone(880,0.09,'square',0.16); },
+    fuseTick(){ tone(1250,0.05,'square',0.14); },
+    pickup(){ tone(520,0.12,'sine',0.3,980); },
+    dump(){ burst(0.5,300,'lowpass',0.5,120); tone(180,0.3,'triangle',0.3,90); },
+    swap(){ tone(300,0.1,'triangle',0.25,600); tone(600,0.1,'triangle',0.22,900,0.08); },
+    blocked(dt){
+      if(!ctx||muted) return;
+      alarmT-=dt;
+      if(alarmT<=0){ alarmT=0.55; tone(660,0.16,'square',0.13); tone(440,0.16,'square',0.13,null,0.18); }
+    },
+    win(){ [523,659,784,1046,784,1046].forEach((f,i)=>tone(f,0.22,'triangle',0.3,null,i*0.13)); },
+    lose(){ [400,340,280,180,120].forEach((f,i)=>tone(f,0.3,'sawtooth',0.22,f*0.8,i*0.16)); },
+    countGo(go){ tone(go?880:440,go?0.4:0.15,'square',0.25); },
+  };
+})();
+
+// ---------- renderer / scene ----------
+const container=$('game');
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.12;
+renderer.domElement.classList.add('webgl');
+container.appendChild(renderer.domElement);
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x87b5d6);
+scene.fog=new THREE.Fog(0x9fc0d4,120,520);
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.5,1200);
+
+const hemi=new THREE.HemisphereLight(0xcfe5ff,0x5d6b4a,0.85);
+scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff2dd,2.0);
+sun.position.set(60,110,40);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-70; sun.shadow.camera.right=70;
+sun.shadow.camera.top=70; sun.shadow.camera.bottom=-70;
+sun.shadow.camera.near=10; sun.shadow.camera.far=320;
+sun.shadow.bias=-0.0006;
+scene.add(sun); scene.add(sun.target);
+// reusable explosion flash light
+const flash=new THREE.PointLight(0xffa030,0,90,1.8);
+scene.add(flash);
+let flashT=0;
+
+// ---------- canvas texture helpers ----------
+function canvasTex(w,h,draw,rx=1,ry=1){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry);
+  t.anisotropy=4; t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+const grassTex=canvasTex(256,256,(g,w,h)=>{
+  g.fillStyle='#6f8f4a'; g.fillRect(0,0,w,h);
+  for(let i=0;i<2600;i++){
+    const v=Math.random();
+    g.fillStyle=v<0.5?'#67853f':v<0.8?'#77955c':'#5f7c38';
+    g.fillRect(Math.random()*w,Math.random()*h,2,2+Math.random()*3);
+  }
+},30,40);
+const roadTex=canvasTex(256,256,(g,w,h)=>{
+  g.fillStyle='#3d3f43'; g.fillRect(0,0,w,h);
+  for(let i=0;i<900;i++){ g.fillStyle=Math.random()<0.5?'#38393d':'#434549';
+    g.fillRect(Math.random()*w,Math.random()*h,2,2); }
+  g.fillStyle='#e8c33a'; g.fillRect(w/2-3,10,6,70); g.fillRect(w/2-3,140,6,70); // dashes
+  g.fillStyle='#d8d5cc'; g.fillRect(6,0,5,h); g.fillRect(w-11,0,5,h); // edges
+},1,46);
+const dirtTex=canvasTex(128,128,(g,w,h)=>{
+  g.fillStyle='#7a5c38'; g.fillRect(0,0,w,h);
+  for(let i=0;i<700;i++){ g.fillStyle=['#6d522f','#86684a','#5d4729'][i%3];
+    g.fillRect(Math.random()*w,Math.random()*h,3,3); }
+},8,8);
+function facadeTex(base,win,rows,cols){
+  return canvasTex(128,128,(g,w,h)=>{
+    g.fillStyle=base; g.fillRect(0,0,w,h);
+    const cw=w/cols, rh=h/rows;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      g.fillStyle=Math.random()<0.25?'#ffe9a8':win;
+      g.fillRect(c*cw+3,r*rh+4,cw-6,rh-8);
+    }
+  });
+}
+const glowTex=canvasTex(64,64,(g,w,h)=>{
+  const r=g.createRadialGradient(32,32,2,32,32,30);
+  r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(0.4,'rgba(255,255,255,.5)');
+  r.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=r; g.fillRect(0,0,w,h);
+});
+const hazardTex=canvasTex(128,32,(g,w,h)=>{
+  g.fillStyle='#1c1a17'; g.fillRect(0,0,w,h);
+  g.fillStyle='#ffa02e';
+  for(let x=-h;x<w+h;x+=24){ g.beginPath(); g.moveTo(x,h); g.lineTo(x+12,h); g.lineTo(x+12+h,0); g.lineTo(x+h,0); g.fill(); }
+},6,1);
+
+// ---------- environment ----------
+const world=new THREE.Group(); scene.add(world);
+{
+  const ground=new THREE.Mesh(
+    new THREE.PlaneGeometry(340,900),
+    new THREE.MeshStandardMaterial({map:grassTex,roughness:1}));
+  ground.rotation.x=-Math.PI/2; ground.position.set(0,0,-260);
+  ground.receiveShadow=true; world.add(ground);
+
+  const roadLen=680;
+  const road=new THREE.Mesh(
+    new THREE.PlaneGeometry(15,roadLen),
+    new THREE.MeshStandardMaterial({map:roadTex,roughness:0.94}));
+  road.rotation.x=-Math.PI/2; road.position.set(0,0.02,-260);
+  road.receiveShadow=true; world.add(road);
+  // dirt shoulders
+  for(const s of [-1,1]){
+    const sh=new THREE.Mesh(new THREE.PlaneGeometry(9,roadLen),
+      new THREE.MeshStandardMaterial({map:dirtTex,roughness:1}));
+    sh.rotation.x=-Math.PI/2; sh.position.set(s*12,0.015,-260);
+    sh.receiveShadow=true; world.add(sh);
+  }
+  // marked lane edges (the lane to clear) — pulsing amber strips
+  const laneMat=new THREE.MeshBasicMaterial({color:0xffa02e,transparent:true,opacity:0.85});
+  window._laneMat=laneMat;
+  for(const s of [-1,1]){
+    const strip=new THREE.Mesh(new THREE.PlaneGeometry(0.55,roadLen),laneMat);
+    strip.rotation.x=-Math.PI/2; strip.position.set(s*CFG.laneHalf,0.045,-260);
+    world.add(strip);
+  }
+  // start + finish gates
+  const gateMat=new THREE.MeshStandardMaterial({color:0x2b2f33,roughness:0.6,metalness:0.5});
+  const gateAmber=new THREE.MeshStandardMaterial({color:0x331f08,emissive:0xff9a1f,emissiveIntensity:1.6});
+  function gate(z,label){
+    const g=new THREE.Group();
+    for(const s of [-1,1]){
+      const p=new THREE.Mesh(new THREE.BoxGeometry(1.2,9,1.2),gateMat);
+      p.position.set(s*8.5,4.5,0); p.castShadow=true; g.add(p);
+      const lamp=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.7,1.4),gateAmber);
+      lamp.position.set(s*8.5,9.2,0); g.add(lamp);
+    }
+    const beam=new THREE.Mesh(new THREE.BoxGeometry(18.4,1.1,1.1),gateMat);
+    beam.position.y=8.6; beam.castShadow=true; g.add(beam);
+    const stripe=new THREE.Mesh(new THREE.PlaneGeometry(18.4,1.0),
+      new THREE.MeshBasicMaterial({map:hazardTex}));
+    stripe.position.set(0,8.6,0.58); g.add(stripe);
+    g.position.z=z; world.add(g);
+  }
+  gate(22,'start');
+  gate(CFG.finishZ,'finish');
+  // containment cradle at finish
+  const cradle=new THREE.Group();
+  const pad=new THREE.Mesh(new THREE.CylinderGeometry(9,10,1.2,24),
+    new THREE.MeshStandardMaterial({color:0x3a3f45,roughness:0.7}));
+  pad.position.y=0.6; pad.receiveShadow=true; cradle.add(pad);
+  const ringMat=new THREE.MeshStandardMaterial({color:0x0c2a12,emissive:0x2dff6a,emissiveIntensity:2});
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(7.5,0.35,10,40),ringMat);
+  ring.rotation.x=Math.PI/2; ring.position.y=1.4; cradle.add(ring);
+  cradle.position.set(0,0,CFG.finishZ-12); world.add(cradle);
+  window._ringMat=ringMat;
+  // boundary fences
+  const fenceMat=new THREE.MeshStandardMaterial({color:0x8a4a20,roughness:0.9});
+  for(let z=30;z>-620;z-=12){
+    for(const s of [-1,1]){
+      const post=new THREE.Mesh(new THREE.BoxGeometry(0.35,1.6,0.35),fenceMat);
+      post.position.set(s*CFG.boundX,0.8,z); world.add(post);
+    }
+  }
+  for(const s of [-1,1]){
+    const rail=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.18,660),
+      new THREE.MeshStandardMaterial({color:0xb0b5ba,roughness:0.5,metalness:0.6}));
+    rail.position.set(s*CFG.boundX,1.35,-290); world.add(rail);
+  }
+  // backdrop mountains + clouds
+  const mMat=new THREE.MeshStandardMaterial({color:0x5a6f84,roughness:1,flatShading:true});
+  for(let i=0;i<14;i++){
+    const m=new THREE.Mesh(new THREE.ConeGeometry(60+Math.random()*70,70+Math.random()*60,5),mMat);
+    m.position.set((Math.random()<0.5?-1:1)*(170+Math.random()*160),0,-620+Math.random()*640);
+    world.add(m);
+  }
+  const cloudMat=new THREE.MeshBasicMaterial({map:glowTex,transparent:true,opacity:0.5,color:0xffffff,depthWrite:false});
+  for(let i=0;i<16;i++){
+    const s=new THREE.Sprite(cloudMat);
+    s.position.set((Math.random()-0.5)*500,90+Math.random()*60,-600+Math.random()*600);
+    s.scale.set(60+Math.random()*70,18+Math.random()*14,1);
+    world.add(s);
+  }
+}
+
+// ---------- particle points systems (single draw call each) ----------
+function makePoints(n,size,color,additive){
+  const geo=new THREE.BufferGeometry();
+  const pos=new Float32Array(n*3), col=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ pos[i*3+1]=-999; col[i*3]=1; col[i*3+1]=1; col[i*3+2]=1; }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const mat=new THREE.PointsMaterial({size,vertexColors:true,transparent:true,opacity:0.9,
+    depthWrite:false,blending:additive?THREE.AdditiveBlending:THREE.NormalBlending,
+    map:glowTex,sizeAttenuation:true});
+  const pts=new THREE.Points(geo,mat); pts.frustumCulled=false; scene.add(pts);
+  return {pts,geo,pos,col,vel:new Float32Array(n*3),life:new Float32Array(n),
+    max:new Float32Array(n),n,head:0,
+    spawn(x,y,z,vx,vy,vz,life,r,g,b){
+      const i=this.head; this.head=(this.head+1)%this.n;
+      this.pos[i*3]=x; this.pos[i*3+1]=y; this.pos[i*3+2]=z;
+      this.vel[i*3]=vx; this.vel[i*3+1]=vy; this.vel[i*3+2]=vz;
+      this.life[i]=life; this.max[i]=life;
+      this.col[i*3]=r; this.col[i*3+1]=g; this.col[i*3+2]=b;
+    },
+    update(dt,grav=0,drag=0){
+      for(let i=0;i<this.n;i++){
+        if(this.life[i]<=0) continue;
+        this.life[i]-=dt;
+        if(this.life[i]<=0){ this.pos[i*3+1]=-999; continue; }
+        const d=1-drag*dt;
+        this.vel[i*3]*=d; this.vel[i*3+2]*=d;
+        this.vel[i*3+1]=this.vel[i*3+1]*d-grav*dt;
+        this.pos[i*3]+=this.vel[i*3]*dt;
+        this.pos[i*3+1]+=this.vel[i*3+1]*dt;
+        this.pos[i*3+2]+=this.vel[i*3+2]*dt;
+        if(this.pos[i*3+1]<0.1&&grav>0){ this.pos[i*3+1]=0.1; this.vel[i*3+1]*=-0.3; }
+      }
+      this.geo.attributes.position.needsUpdate=true;
+      this.geo.attributes.color.needsUpdate=true;
+    }};
+}
+const dust=makePoints(700,3.2,null,false);    // tan dust / smoke
+const spark=makePoints(400,1.6,null,true);    // additive sparks / fire
+function puffDust(x,y,z,n=10,spread=4,up=5){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*spread;
+    dust.spawn(x,y,z,Math.cos(a)*s,Math.random()*up,Math.sin(a)*s,
+      0.7+Math.random()*0.9,0.72,0.66,0.55);
+  }
+}
+function puffSmoke(x,y,z,n=8){
+  for(let i=0;i<n;i++)
+    dust.spawn(x+(Math.random()-0.5)*2,y+Math.random(),z+(Math.random()-0.5)*2,
+      (Math.random()-0.5)*2,2+Math.random()*2,(Math.random()-0.5)*2,
+      1.2+Math.random(),0.25,0.24,0.24);
+}
+function puffSpark(x,y,z,n=14,power=12){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=2+Math.random()*power;
+    spark.spawn(x,y,z,Math.cos(a)*s,3+Math.random()*power,Math.sin(a)*s,
+      0.4+Math.random()*0.5,1,0.5+Math.random()*0.4,0.15);
+  }
+}
+function puffFire(x,y,z,n=16){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=Math.random()*6;
+    spark.spawn(x+Math.cos(a)*2,y+Math.random()*2,z+Math.sin(a)*2,
+      Math.cos(a)*s,4+Math.random()*7,Math.sin(a)*s,
+      0.5+Math.random()*0.5,1,0.35+Math.random()*0.35,0.1);
+  }
+}
+// shockwave rings (pooled meshes)
+const rings=[];
+for(let i=0;i<6;i++){
+  const m=new THREE.Mesh(new THREE.RingGeometry(0.9,1.1,40),
+    new THREE.MeshBasicMaterial({color:0xffcf7a,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));
+  m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m);
+  rings.push({m,t:1});
+}
+function shockwave(x,y,z,big=1){
+  const r=rings.find(r=>r.t>=1)||rings[0];
+  r.t=0; r.big=big; r.m.visible=true; r.m.position.set(x,Math.max(0.4,y),z);
+}
+function updateRings(dt){
+  for(const r of rings){
+    if(r.t>=1){ r.m.visible=false; continue; }
+    r.t+=dt*1.6;
+    const s=(1+r.t*22)*(r.big||1);
+    r.m.scale.set(s,s,s);
+    r.m.material.opacity=0.85*(1-r.t);
+  }
+}
+
+// ---------- debris chunks (pooled rigid boxes) ----------
+const debrisGeo=new THREE.BoxGeometry(1,1,1);
+const debrisMats=[
+  new THREE.MeshStandardMaterial({color:0x9a938a,roughness:0.95}),
+  new THREE.MeshStandardMaterial({color:0x7a6a52,roughness:0.95}),
+  new THREE.MeshStandardMaterial({color:0x5a6068,roughness:0.8}),
+  new THREE.MeshStandardMaterial({color:0xb56a3a,roughness:0.9}),
+];
+const debrisPool=[];
+for(let i=0;i<130;i++){
+  const m=new THREE.Mesh(debrisGeo,debrisMats[i%4]);
+  m.castShadow=true; m.visible=false; scene.add(m);
+  debrisPool.push({m,vx:0,vy:0,vz:0,rx:0,ry:0,rz:0,life:0,s:1});
+}
+let debrisHead=0;
+function spawnDebris(x,y,z,n,power=10,up=9){
+  for(let k=0;k<n;k++){
+    const d=debrisPool[debrisHead]; debrisHead=(debrisHead+1)%debrisPool.length;
+    const a=Math.random()*Math.PI*2, s=2+Math.random()*power;
+    d.m.visible=true;
+    d.s=0.35+Math.random()*0.85;
+    d.m.scale.set(d.s,d.s*(0.6+Math.random()*0.7),d.s);
+    d.m.position.set(x+(Math.random()-0.5)*2,y+Math.random()*2,z+(Math.random()-0.5)*2);
+    d.m.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+    d.vx=Math.cos(a)*s; d.vz=Math.sin(a)*s; d.vy=3+Math.random()*up;
+    d.rx=(Math.random()-0.5)*10; d.ry=(Math.random()-0.5)*10; d.rz=(Math.random()-0.5)*10;
+    d.life=2.2+Math.random()*1.4;
+  }
+}
+function updateDebris(dt){
+  for(const d of debrisPool){
+    if(d.life<=0) continue;
+    d.life-=dt;
+    if(d.life<=0){ d.m.visible=false; continue; }
+    d.vy-=26*dt;
+    d.m.position.x+=d.vx*dt; d.m.position.y+=d.vy*dt; d.m.position.z+=d.vz*dt;
+    const f=d.s*0.5;
+    if(d.m.position.y<f){ d.m.position.y=f; d.vy*=-0.35; d.vx*=0.7; d.vz*=0.7;
+      d.rx*=0.6; d.ry*=0.6; d.rz*=0.6; }
+    d.m.rotation.x+=d.rx*dt; d.m.rotation.y+=d.ry*dt; d.m.rotation.z+=d.rz*dt;
+    if(d.life<0.5){ const s=d.s*(d.life/0.5); d.m.scale.set(s,s,s); }
+  }
+}
+
+// ---------- obstacles ----------
+const obstacles=[];   // anything ram-able / rig-blocking
+const cells=[];       // surge cells (explosive), also in obstacles
+const TRAIT={
+  barrier:{hp:30, score:50,  mass:1},
+  house:  {hp:120,score:150, mass:2},
+  block:  {hp:220,score:350, mass:3},
+  tower:  {hp:340,score:600, mass:4},
+  prop:   {hp:14, score:15,  mass:0.5},
+  cell:   {hp:10, score:100, mass:1},
+};
+function addObstacle(o){
+  o.hp=o.maxHp=TRAIT[o.type].hp*(o.hpMul||1);
+  o.alive=true; o.blocksRig=o.blocksRig??(o.type!=='prop');
+  o.countsClear=o.countsClear??(o.blocksRig&&Math.abs(o.x)<CFG.laneHalf+3);
+  o.w=o.w||4; o.d=o.d||4; o.h=o.h||3;
+  obstacles.push(o);
+  if(o.type==='cell') cells.push(o);
+  return o;
+}
+// building meshes
+const roofMat=new THREE.MeshStandardMaterial({color:0x4a4238,roughness:0.95});
+const trimMat=new THREE.MeshStandardMaterial({color:0x2b2f33,roughness:0.8});
+function buildStructure(o){
+  const g=new THREE.Group();
+  if(o.type==='barrier'){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(o.w,o.h,o.d),
+      new THREE.MeshStandardMaterial({color:0xb9b2a4,roughness:0.9}));
+    m.position.y=o.h/2; m.castShadow=m.receiveShadow=true; g.add(m);
+    const stripe=new THREE.Mesh(new THREE.PlaneGeometry(o.w,0.5),
+      new THREE.MeshBasicMaterial({map:hazardTex}));
+    stripe.position.set(0,o.h*0.62,o.d/2+0.02); g.add(stripe);
+    const stripe2=stripe.clone(); stripe2.rotation.y=Math.PI;
+    stripe2.position.z=-o.d/2-0.02; g.add(stripe2);
+  }else if(o.type==='cell'){
+    const body=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.25,2.2,12),
+      new THREE.MeshStandardMaterial({color:0x123a5e,roughness:0.4,metalness:0.6,
+        emissive:0x1e90ff,emissiveIntensity:0.85}));
+    body.position.y=1.1; body.castShadow=true; g.add(body); o.glowMat=body.material;
+    for(let i=0;i<3;i++){
+      const band=new THREE.Mesh(new THREE.TorusGeometry(1.18,0.09,8,20),
+        new THREE.MeshStandardMaterial({color:0x08131f,emissive:0x66ccff,emissiveIntensity:2}));
+      band.rotation.x=Math.PI/2; band.position.y=0.5+i*0.6; g.add(band);
+    }
+    const warn=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.5),
+      new THREE.MeshBasicMaterial({map:hazardTex}));
+    warn.position.set(0,1.1,1.28); g.add(warn);
+  }else if(o.type==='prop'){
+    if(o.prop==='tree'){
+      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.25,0.35,2.2,7),
+        new THREE.MeshStandardMaterial({color:0x5d4729,roughness:1}));
+      trunk.position.y=1.1; trunk.castShadow=true; g.add(trunk);
+      const top=new THREE.Mesh(new THREE.ConeGeometry(1.7,3.4,8),
+        new THREE.MeshStandardMaterial({color:0x3f6b2e,roughness:1,flatShading:true}));
+      top.position.y=3.6; top.castShadow=true; g.add(top);
+    }else{ // power pole
+      const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.24,7,7),
+        new THREE.MeshStandardMaterial({color:0x4a3a26,roughness:1}));
+      pole.position.y=3.5; pole.castShadow=true; g.add(pole);
+      const cross=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.18,0.18),trimMat);
+      cross.position.y=6.2; g.add(cross);
+    }
+  }else{
+    // house / block / tower — facade box + roof + trim
+    const pal={house:['#c9b896','#2b3a4a',3,4],block:['#a89a8a','#22303e',5,5],tower:['#8f9aa6','#1d2836',8,5]}[o.type];
+    const wall=new THREE.Mesh(new THREE.BoxGeometry(o.w,o.h,o.d),
+      new THREE.MeshStandardMaterial({map:facadeTex(pal[0],pal[1],pal[2],pal[3]),roughness:0.9}));
+    wall.position.y=o.h/2; wall.castShadow=wall.receiveShadow=true; g.add(wall);
+    const roof=new THREE.Mesh(new THREE.BoxGeometry(o.w+0.6,0.5,o.d+0.6),roofMat);
+    roof.position.y=o.h+0.25; roof.castShadow=true; g.add(roof);
+    const base=new THREE.Mesh(new THREE.BoxGeometry(o.w+0.3,0.8,o.d+0.3),trimMat);
+    base.position.y=0.4; g.add(base);
+  }
+  g.position.set(o.x,0,o.z);
+  world.add(g); o.mesh=g;
+  // rubble pile shown after destruction (visual only)
+  const rub=new THREE.Mesh(new THREE.ConeGeometry(Math.max(o.w,o.d)*0.42,1.1,7),
+    new THREE.MeshStandardMaterial({color:0x7d766c,roughness:1,flatShading:true}));
+  rub.position.set(o.x,0.4,o.z); rub.visible=false; rub.receiveShadow=true;
+  world.add(rub); o.rubbleMesh=rub;
+}
+function damageObstacle(o,dmg,hx,hz,byRig=false){
+  if(!o.alive) return;
+  o.hp-=dmg;
+  // shake + chip particles while being chewed
+  if(o.mesh&&o.type!=='cell'){
+    o.mesh.position.x=o.x+(Math.random()-0.5)*0.25;
+    o.mesh.position.z=o.z+(Math.random()-0.5)*0.25;
+  }
+  if(Math.random()<0.5) puffDust(hx??o.x,1.5,hz??o.z,4,3,4);
+  if(o.hp<=0) destroyObstacle(o,byRig);
+}
+function destroyObstacle(o,byRig=false){
+  if(!o.alive) return;
+  o.alive=false;
+  if(o.mesh) o.mesh.visible=false;
+  if(o.rubbleMesh) o.rubbleMesh.visible=true;
+  const big=o.type==='tower'?1.6:o.type==='block'?1.25:1;
+  spawnDebris(o.x,2,o.z,o.type==='prop'?5:o.type==='barrier'?8:14,9*big,8);
+  puffDust(o.x,2,o.z,22*big,7,9);
+  puffSmoke(o.x,3,o.z,6);
+  Audio2.crumble();
+  addShake(0.35*big);
+  if(o.type==='cell'){ igniteCell(o); return; }
+  score+=TRAIT[o.type].score;
+  // drop a rubble pickup for the MULE (lane wrecks only, cap total)
+  if((o.countsClear||o.type!=='prop')&&rubblePickups.length<12&&Math.random()<0.9)
+    spawnRubble(o.x+(Math.random()-0.5)*4,o.z+(Math.random()-0.5)*4);
+  updateClearPct();
+}
+// surge cell explosion chain
+function igniteCell(o){
+  if(o.fuse!=null) return;
+  o.fuse=0.35;
+}
+function explodeCell(o){
+  o.fuse=null;
+  const R=13;
+  shockwave(o.x,1.5,o.z,1.1);
+  puffFire(o.x,1,o.z,20); puffSpark(o.x,2,o.z,22,16);
+  puffSmoke(o.x,2,o.z,10); puffDust(o.x,1,o.z,14,8,7);
+  spawnDebris(o.x,2,o.z,8,14,12);
+  flash.position.set(o.x,5,o.z); flashT=1;
+  Audio2.explosion(1);
+  addShake(0.8);
+  score+=TRAIT.cell.score;
+  updateClearPct();
+  // damage nearby obstacles (chain)
+  for(const t of obstacles){
+    if(!t.alive||t===o) continue;
+    const dx=t.x-o.x,dz=t.z-o.z,dist=Math.hypot(dx,dz);
+    if(dist<R+Math.max(t.w,t.d)*0.4){
+      if(t.type==='cell'){ igniteCell(t); }
+      else damageObstacle(t,300,t.x,t.z);
+    }
+  }
+  // shove vehicles
+  for(const v of vehicles){
+    const dx=v.pos.x-o.x,dz=v.pos.z-o.z,dist=Math.hypot(dx,dz)||1;
+    if(dist<16){
+      const f=(1-dist/16)*26;
+      v.vel.x+=dx/dist*f; v.vel.z+=dz/dist*f;
+      damageVehicle(v,(1-dist/16)*25);
+    }
+  }
+  // the rig can be wounded by blasts — keep cells away from the lane arrival
+  const rd=Math.hypot(rig.pos.x-o.x,rig.pos.z-o.z);
+  if(rd<17){
+    hurtRig(12,'SURGE BLAST WOUNDED THE RIG!');
+  }
+}
+
+// ---------- level layout: MELTDOWN MILE ----------
+const TRENCH_Z=-400, TRENCH_HALF=7, TRENCH_W=10;
+function buildLevel(){
+  const L=[
+    // x, z, type, w, d, h  — teaching stretch: barriers then houses
+    [0,-55,'barrier',9,1.6,1.6],[ -3,-85,'barrier',6,1.6,1.6],[4,-88,'barrier',6,1.6,1.6],
+    [0,-120,'house',8,7,5],
+    [-4,-155,'house',7,7,5],[5,-160,'barrier',5,1.6,1.6],
+    [0,-195,'block',10,8,9],
+    [-5,-230,'cell',2.4,2.4,2.2],[5,-232,'house',7,7,5],
+    [0,-268,'block',11,8,10],
+    [-4,-305,'tower',9,9,20],[5,-312,'cell',2.4,2.4,2.2],
+    [0,-345,'house',8,7,5],
+    // culvert trench at -400 (filled via MULE)
+    [0,-445,'block',10,8,9],
+    [-5,-478,'house',7,7,5],[4,-482,'house',7,7,5],
+    [0,-515,'tower',10,9,22],[-6,-522,'cell',2.4,2.4,2.2],[6,-522,'cell',2.4,2.4,2.2],
+    [0,-545,'block',9,8,9],
+  ];
+  for(const [x,z,t,w,d,h] of L) buildStructure(addObstacle({type:t,x,z,w,d,h}));
+  // extra cells tucked beside big wrecks (reward scouting)
+  // off-road props for fun + destruction score
+  for(let i=0;i<46;i++){
+    const s=Math.random()<0.5?-1:1;
+    const x=s*(17+Math.random()*24), z=-20-Math.random()*540;
+    buildStructure(addObstacle({type:'prop',prop:Math.random()<0.6?'tree':'pole',
+      x,z,w:1.5,d:1.5,h:4,blocksRig:false,countsClear:false}));
+  }
+}
+// collapsed culvert trench
+const trench={fill:0,filled:false};
+let trenchMesh,fillMesh;
+function buildTrench(){
+  const g=new THREE.Group();
+  const dark=new THREE.MeshStandardMaterial({color:0x14100b,roughness:1});
+  const pit=new THREE.Mesh(new THREE.BoxGeometry(TRENCH_HALF*2,3,TRENCH_W),dark);
+  pit.position.set(0,-1.4,TRENCH_Z); g.add(pit);
+  // broken asphalt lips
+  const lipMat=new THREE.MeshStandardMaterial({color:0x3d3f43,roughness:1});
+  for(const s of [-1,1]){
+    const lip=new THREE.Mesh(new THREE.BoxGeometry(TRENCH_HALF*2,0.5,1.6),lipMat);
+    lip.position.set(0,0.1,TRENCH_Z+s*(TRENCH_W/2+0.8));
+    lip.rotation.x=s*0.18; lip.castShadow=true; g.add(lip);
+  }
+  // warning barriers flanking the hole
+  for(const sx of [-1,1]) for(const sz of [-1,1]){
+    const b=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.1,0.5),
+      new THREE.MeshStandardMaterial({color:0xc9541e,roughness:0.8}));
+    b.position.set(sx*(TRENCH_HALF+1.6),0.55,TRENCH_Z+sz*(TRENCH_W/2+0.4));
+    b.castShadow=true; g.add(b);
+  }
+  // fill ramp (grows with fill)
+  fillMesh=new THREE.Mesh(new THREE.BoxGeometry(TRENCH_HALF*2-0.6,1,TRENCH_W-0.6),
+    new THREE.MeshStandardMaterial({map:dirtTex,roughness:1}));
+  fillMesh.position.set(0,-2.6,TRENCH_Z); fillMesh.receiveShadow=true; g.add(fillMesh);
+  world.add(g); trenchMesh=g;
+}
+function trenchTopY(){
+  return -2.1+(trench.fill/CFG.fillNeeded)*2.35;
+}
+function updateTrenchMesh(){
+  const t=trench.fill/CFG.fillNeeded;
+  fillMesh.position.y=-2.6+t*2.85;
+  fillMesh.scale.y=0.6+t*2.4;
+  if(trench.filled){
+    fillMesh.position.y=0.1; fillMesh.scale.y=0.5;
+    banner('CULVERT BRIDGED — RIG CAN PASS');
+  }
+}
+// rubble pickups for the MULE
+const rubblePickups=[];
+const rubbleGeo=new THREE.DodecahedronGeometry(0.7,0);
+const rubbleMat=new THREE.MeshStandardMaterial({color:0x6b5a3e,roughness:0.9,
+  emissive:0xff9a1f,emissiveIntensity:0.55});
+function spawnRubble(x,z){
+  const m=new THREE.Mesh(rubbleGeo,rubbleMat);
+  m.position.set(clamp(x,-CFG.boundX+2,CFG.boundX-2),0.8,clamp(z,CFG.finishZ+8,40));
+  m.castShadow=true; world.add(m);
+  rubblePickups.push({m,x:m.position.x,z:m.position.z,t:Math.random()*6,taken:false});
+}
+function updateRubble(dt){
+  for(const r of rubblePickups){
+    if(r.taken) continue;
+    r.t+=dt;
+    r.m.rotation.y+=dt*1.6; r.m.position.y=0.8+Math.sin(r.t*3)*0.18;
+  }
+}
+
+// ---------- vehicles ----------
+const VEH_DEFS={
+  horn:{name:'HORNBACK',sub:'WEDGE DOZER',color:0xd88a1e,maxSpeed:21,maxRev:8,accel:15,rev:10,
+    brake:34,turn:1.7,grip:7,ram:1.8,radius:2.3,tough:1.4,stars:['★★★','★★☆']},
+  mule:{name:'MULE',sub:'TIPPER',color:0x3f7a3a,maxSpeed:24,maxRev:9,accel:17,rev:11,
+    brake:30,turn:1.9,grip:6.5,ram:1.0,radius:2.4,tough:1.2,stars:['★★☆','★★☆']},
+  dart:{name:'DART',sub:'SCOUT BUGGY',color:0x2e6fb7,maxSpeed:34,maxRev:11,accel:24,rev:13,
+    brake:30,turn:2.5,grip:5,ram:0.55,radius:1.8,tough:0.8,stars:['★☆☆','★★★']},
+};
+const vehicles=[];
+let activeVeh=null;
+const tireMat=new THREE.MeshStandardMaterial({color:0x1a1a1c,roughness:0.95});
+const glassMat=new THREE.MeshStandardMaterial({color:0x9fd4ff,roughness:0.2,metalness:0.4});
+const steelMat=new THREE.MeshStandardMaterial({color:0x8b9096,roughness:0.45,metalness:0.65});
+function wheel(r,w){
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,w,14),tireMat);
+  m.rotation.z=Math.PI/2; m.castShadow=true;
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(r*0.45,r*0.45,w+0.06,10),steelMat);
+  m.add(hub); return m;
+}
+function buildVehicleMesh(kind){
+  const def=VEH_DEFS[kind];
+  const g=new THREE.Group();
+  const paint=new THREE.MeshStandardMaterial({color:def.color,roughness:0.55,metalness:0.25});
+  const dark=new THREE.MeshStandardMaterial({color:0x24272b,roughness:0.8});
+  const wheels=[];
+  function addWheel(x,y,z,r,w){
+    const wh=wheel(r,w); wh.position.set(x,y,z); g.add(wh); wheels.push(wh); return wh;
+  }
+  if(kind==='horn'){
+    const body=new THREE.Mesh(new THREE.BoxGeometry(3.1,1.5,4.4),paint);
+    body.position.y=1.45; body.castShadow=true; g.add(body);
+    const cab=new THREE.Mesh(new THREE.BoxGeometry(2.3,1.3,1.8),dark);
+    cab.position.set(0,2.8,-0.9); cab.castShadow=true; g.add(cab);
+    const glass=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.8,0.2),glassMat);
+    glass.position.set(0,2.85,0.02); g.add(glass);
+    // wedge blade
+    const blade=new THREE.Mesh(new THREE.BoxGeometry(3.8,1.5,0.5),steelMat);
+    blade.position.set(0,0.85,2.7); blade.rotation.x=-0.22; blade.castShadow=true; g.add(blade);
+    for(const sx of [-1,1]){
+      const arm=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.3,1.6),dark);
+      arm.position.set(sx*1.4,0.9,1.9); g.add(arm);
+    }
+    // tracks
+    for(const sx of [-1,1]){
+      const tr=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.9,4.6),dark);
+      tr.position.set(sx*1.75,0.55,0); tr.castShadow=true; g.add(tr);
+    }
+    addWheel(-1.75,0.55,2.45,0.55,0.95); addWheel(1.75,0.55,2.45,0.55,0.95);
+    addWheel(-1.75,0.55,-2.35,0.55,0.95); addWheel(1.75,0.55,-2.35,0.55,0.95);
+  }else if(kind==='mule'){
+    const cabM=new THREE.Mesh(new THREE.BoxGeometry(2.9,1.7,1.9),paint);
+    cabM.position.set(0,1.55,2.4); cabM.castShadow=true; g.add(cabM);
+    const shield=new THREE.Mesh(new THREE.BoxGeometry(2.6,0.9,0.25),glassMat);
+    shield.position.set(0,1.75,3.38); g.add(shield);
+    const bed=new THREE.Mesh(new THREE.BoxGeometry(3.0,0.4,4.2),dark);
+    bed.position.set(0,1.5,-1.0); bed.castShadow=true; g.add(bed);
+    for(const sx of [-1,1]){
+      const wall=new THREE.Mesh(new THREE.BoxGeometry(0.25,1.2,4.2),paint);
+      wall.position.set(sx*1.5,2.1,-1.0); wall.castShadow=true; g.add(wall);
+    }
+    const tail=new THREE.Mesh(new THREE.BoxGeometry(3.0,1.2,0.25),paint);
+    tail.position.set(0,2.1,-3.1); g.add(tail);
+    // load visual: dirt heap grows with carried rubble
+    const heap=new THREE.Mesh(new THREE.ConeGeometry(1.3,1.0,8),
+      new THREE.MeshStandardMaterial({color:0x7a5c38,roughness:1,flatShading:true}));
+    heap.position.set(0,2.2,-1.0); heap.visible=false; g.add(heap);
+    g.userData.heap=heap;
+    addWheel(-1.6,0.7,2.4,0.7,0.5); addWheel(1.6,0.7,2.4,0.7,0.5);
+    addWheel(-1.6,0.7,-1.6,0.7,0.5); addWheel(1.6,0.7,-1.6,0.7,0.5);
+    addWheel(-1.6,0.7,-2.7,0.7,0.5); addWheel(1.6,0.7,-2.7,0.7,0.5);
+  }else{ // dart
+    const body=new THREE.Mesh(new THREE.BoxGeometry(2.0,0.7,3.4),paint);
+    body.position.y=0.95; body.castShadow=true; g.add(body);
+    const nose=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.5,1.0),paint);
+    nose.position.set(0,0.8,2.0); g.add(nose);
+    for(const sx of [-1,1]) for(const sz of [-1,1]){
+      const bar=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1.3,6),dark);
+      bar.position.set(sx*0.85,1.7,sz*0.7-0.3); g.add(bar);
+    }
+    const seat=new THREE.Mesh(new THREE.BoxGeometry(1.1,0.8,1.0),dark);
+    seat.position.set(0,1.3,-0.4); g.add(seat);
+    const lampM=new THREE.MeshStandardMaterial({color:0x222200,emissive:0xffee88,emissiveIntensity:2.2});
+    for(const sx of [-1,1]){
+      const lamp=new THREE.Mesh(new THREE.SphereGeometry(0.18,8,8),lampM);
+      lamp.position.set(sx*0.6,0.9,2.5); g.add(lamp);
+    }
+    addWheel(-1.25,0.55,1.35,0.55,0.4); addWheel(1.25,0.55,1.35,0.55,0.4);
+    addWheel(-1.25,0.55,-1.35,0.55,0.4); addWheel(1.25,0.55,-1.35,0.55,0.4);
+  }
+  // brakelights
+  const blM=new THREE.MeshBasicMaterial({color:0x550000});
+  for(const sx of [-1,1]){
+    const bl=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.25,0.1),blM);
+    bl.position.set(sx*1.1,1.3,kind==='horn'?-2.25:kind==='mule'?-3.25:-1.75); g.add(bl);
+  }
+  g.userData.wheels=wheels; g.userData.brakeMat=blM;
+  // active marker (floating chevron)
+  const chev=new THREE.Mesh(new THREE.ConeGeometry(0.5,0.9,4),
+    new THREE.MeshBasicMaterial({color:0xffd27a}));
+  chev.rotation.x=Math.PI; chev.position.y=5.2; chev.visible=false; g.add(chev);
+  g.userData.chev=chev;
+  return g;
+}
+function spawnVehicle(kind,x,z,heading){
+  const def=VEH_DEFS[kind];
+  const mesh=buildVehicleMesh(kind);
+  world.add(mesh);
+  const v={kind,def,mesh,pos:new THREE.Vector3(x,0,z),vel:new THREE.Vector3(),
+    heading,hp:100,load:0,spin:0,airborne:0,lastCrash:0};
+  mesh.position.copy(v.pos); mesh.rotation.y=heading;
+  vehicles.push(v);
+  return v;
+}
+function damageVehicle(v,dmg){
+  if(state!=='play') return;
+  v.hp-=dmg/v.def.tough;
+  if(v.hp<=0){
+    v.hp=100;
+    // wrecked: dramatic explosion, respawn in place
+    puffFire(v.pos.x,1,v.pos.z,14); puffSmoke(v.pos.x,2,v.pos.z,8);
+    shockwave(v.pos.x,1,v.pos.z,0.8);
+    flash.position.set(v.pos.x,4,v.pos.z); flashT=1;
+    Audio2.explosion(0.7); addShake(0.7);
+    v.vel.set(0,0,0);
+    tip(`${v.def.name} wrecked — field-repaired. Careful out there.`);
+  }
+  if(v===activeVeh) updateVehCard();
+}
+
+// ---------- the Cinder Rig (runaway reactor hauler) ----------
+const rig={
+  pos:new THREE.Vector3(0,0,Z0), hull:CFG.rigHull, blocked:false,
+  moving:false, w:5.2, len:15, wasBlocked:false, beaconT:0,
+};
+function buildRig(){
+  const g=new THREE.Group();
+  const dark=new THREE.MeshStandardMaterial({color:0x2b2f33,roughness:0.6,metalness:0.5});
+  const amber=new THREE.MeshStandardMaterial({color:0x3a230a,emissive:0xff9a1f,emissiveIntensity:1.4});
+  // cab
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(4.2,2.8,3.4),dark);
+  cab.position.set(0,2.2,-5.6); cab.castShadow=true; g.add(cab);
+  const shield=new THREE.Mesh(new THREE.BoxGeometry(3.8,1.2,0.3),glassMat);
+  shield.position.set(0,2.6,-7.35); g.add(shield);
+  // flatbed
+  const bed=new THREE.Mesh(new THREE.BoxGeometry(4.6,0.7,10.5),dark);
+  bed.position.set(0,1.5,1.0); bed.castShadow=true; g.add(bed);
+  // reactor vessel (the glowing core)
+  const vessel=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.7,6.4,18),
+    new THREE.MeshStandardMaterial({color:0x3d3f43,roughness:0.35,metalness:0.7}));
+  vessel.rotation.x=Math.PI/2; vessel.position.set(0,3.2,1.2); vessel.castShadow=true; g.add(vessel);
+  const coreMat=new THREE.MeshStandardMaterial({color:0x2a0d02,emissive:0xff5a1a,emissiveIntensity:3});
+  g.userData.coreMat=coreMat;
+  for(const dz of [-1.2,1.2,3.4]){
+    const band=new THREE.Mesh(new THREE.TorusGeometry(1.75,0.22,10,24),coreMat);
+    band.position.set(0,3.2,dz); g.add(band);
+  }
+  const coreLight=new THREE.PointLight(0xff6a1a,30,40,1.8);
+  coreLight.position.set(0,4.5,1.2); g.add(coreLight);
+  // hazard stripes + beacons
+  for(const sx of [-1,1]){
+    const stripe=new THREE.Mesh(new THREE.PlaneGeometry(10.5,0.6),
+      new THREE.MeshBasicMaterial({map:hazardTex}));
+    stripe.rotation.y=sx*Math.PI/2; stripe.position.set(sx*2.32,1.5,1.0); g.add(stripe);
+  }
+  const becMat=new THREE.MeshStandardMaterial({color:0x330000,emissive:0xff2211,emissiveIntensity:2});
+  g.userData.beaconMat=becMat;
+  for(const sx of [-1,1]){
+    const bec=new THREE.Mesh(new THREE.SphereGeometry(0.3,10,10),becMat);
+    bec.position.set(sx*1.8,3.9,-5.6); g.add(bec);
+  }
+  // 8 wheels
+  for(const sx of [-1,1]) for(const zz of [-5.6,-3.4,0.2,2.8,5.0]){
+    const wh=wheel(0.85,0.6); wh.position.set(sx*2.2,0.85,zz); g.add(wh);
+  }
+  // cowcatcher
+  const cow=new THREE.Mesh(new THREE.BoxGeometry(4.6,1.4,0.5),amber);
+  cow.position.set(0,0.8,-7.6); cow.rotation.x=0.3; g.add(cow);
+  g.position.copy(rig.pos);
+  world.add(g);
+  rig.mesh=g;
+}
+function hurtRig(dmg,msg){
+  if(state!=='play') return;
+  rig.hull-=dmg;
+  vigFlash(clamp(dmg/25,0.3,1));
+  if(msg) banner(msg,true);
+  Audio2.crash(true);
+  updateStatusBar();
+  if(rig.hull<=0){ rig.hull=0; lose('HULL BREACH','The Cinder Rig tore itself open on the wreckage. The core scrammed — but the run is lost.'); }
+}
+
+// ---------- driving physics + collisions ----------
+function fwdVec(h,out){
+  out=out||new THREE.Vector3();
+  return out.set(Math.sin(h),0,Math.cos(h));
+}
+function updateVehicle(v,dt,input,active){
+  const def=v.def;
+  const fwd=fwdVec(v.heading,_f1);
+  const right=_r1.set(-fwd.z,0,fwd.x);
+  let fSpeed=v.vel.dot(fwd);
+  let latSpeed=v.vel.dot(right);
+  if(active&&state==='play'){
+    // steering (grip authority scales with speed, reverses in reverse)
+    const spdK=clamp(Math.abs(fSpeed)/6,0,1);
+    const dir=fSpeed>=0?1:-1;
+    v.heading-=input.st*def.turn*(0.35+0.65*spdK)*dir*dt*(input.hb?1.35:1);
+    fwdVec(v.heading,fwd); right.set(-fwd.z,0,fwd.x);
+    fSpeed=v.vel.dot(fwd); latSpeed=v.vel.dot(right);
+    // longitudinal
+    if(input.th>0){
+      fSpeed+=def.accel*input.th*dt;
+      if(fSpeed>def.maxSpeed) fSpeed=lerp(fSpeed,def.maxSpeed,3*dt);
+    }else if(input.th<0){
+      if(fSpeed>1) fSpeed+=def.brake*input.th*dt;      // brake
+      else fSpeed=Math.max(fSpeed+def.rev*input.th*dt,-def.maxRev);
+    }else{
+      fSpeed-=fSpeed*0.7*dt;
+      if(Math.abs(fSpeed)<0.25) fSpeed=0;
+    }
+    if(input.hb) fSpeed-=fSpeed*3.2*dt;
+    // lateral grip / drift
+    const grip=input.hb?1.6:def.grip;
+    latSpeed*=Math.exp(-grip*dt);
+    if(input.hb&&Math.abs(fSpeed)>6) latSpeed+= -input.st*fSpeed*0.9*dt;
+  }else{
+    // parked: strong brake
+    fSpeed-=fSpeed*6*dt; latSpeed-=latSpeed*8*dt;
+  }
+  v.vel.copy(fwd).multiplyScalar(fSpeed).addScaledVector(right,latSpeed);
+  v.pos.addScaledVector(v.vel,dt);
+  // bounds
+  if(v.pos.x<-CFG.boundX+1.5){ v.pos.x=-CFG.boundX+1.5; v.vel.x=Math.abs(v.vel.x)*0.3; }
+  if(v.pos.x>CFG.boundX-1.5){ v.pos.x=CFG.boundX-1.5; v.vel.x=-Math.abs(v.vel.x)*0.3; }
+  if(v.pos.z>42){ v.pos.z=42; v.vel.z=-Math.abs(v.pos.z)*0.2; }
+  if(v.pos.z<CFG.finishZ-4){ v.pos.z=CFG.finishZ-4; v.vel.z=Math.abs(v.vel.z)*0.2; }
+  // trench pit: unfilled culvert blocks vehicles (invisible wall + rattle)
+  if(!trench.filled&&Math.abs(v.pos.x)<TRENCH_HALF+1.6&&Math.abs(v.pos.z-TRENCH_Z)<TRENCH_W/2+2.2){
+    const dz=v.pos.z-TRENCH_Z;
+    v.pos.z=TRENCH_Z+Math.sign(dz||1)*(TRENCH_W/2+2.2);
+    const impact=Math.abs(fSpeed);
+    if(impact>4&&performance.now()-v.lastCrash>400){
+      v.lastCrash=performance.now(); Audio2.crash(false);
+      addShake(0.25); puffDust(v.pos.x,1,v.pos.z,6,3,4);
+      tip('Collapsed culvert! Haul rubble with the MULE and press F here.');
+    }
+    v.vel.multiplyScalar(0.2);
+  }
+  // collide with obstacles (circle vs AABB)
+  collideObstacles(v,active);
+  // rubble pickup (MULE only)
+  if(v.kind==='mule'){
+    for(const r of rubblePickups){
+      if(r.taken) continue;
+      if(Math.hypot(v.pos.x-r.x,v.pos.z-r.z)<3.2&&v.load<CFG.fillNeeded){
+        r.taken=true; r.m.visible=false; v.load++;
+        Audio2.pickup();
+        puffSpark(r.x,1,r.z,6,6);
+        if(v===activeVeh){ updateVehCard(); tip(`Rubble loaded (${v.load}/${CFG.fillNeeded}). Dump at the culvert with F.`); }
+      }
+    }
+    const heap=v.mesh.userData.heap;
+    if(heap){ heap.visible=v.load>0; heap.scale.setScalar(0.5+v.load*0.28); }
+  }
+  // mesh transform + wheel spin + lean
+  v.mesh.position.copy(v.pos);
+  v.mesh.rotation.y=v.heading;
+  const spd=v.vel.length();
+  v.spin+=spd*dt*1.4;
+  for(const w of v.mesh.userData.wheels) w.rotation.x=v.spin;
+  v.mesh.rotation.z=lerp(v.mesh.rotation.z,clamp(-latSpeed*0.03,-0.2,0.2),8*dt);
+  v.mesh.rotation.x=lerp(v.mesh.rotation.x,clamp(fSpeed*0.004,-0.06,0.09),6*dt);
+  v.mesh.userData.brakeMat.color.setHex(active&&input.th<0?0xff2222:0x550000);
+  return {fSpeed,latSpeed};
+}
+const _f1=new THREE.Vector3(), _r1=new THREE.Vector3();
+function collideObstacles(v,active){
+  const r=v.def.radius;
+  for(const o of obstacles){
+    if(!o.alive) continue;
+    const hw=o.w/2, hd=o.d/2;
+    const cx=clamp(v.pos.x,o.x-hw,o.x+hw);
+    const cz=clamp(v.pos.z,o.z-hd,o.z+hd);
+    let dx=v.pos.x-cx, dz=v.pos.z-cz;
+    let dist=Math.hypot(dx,dz);
+    if(dist>=r) continue;
+    // inside the box: push along smallest penetration axis
+    if(dist<1e-4){
+      const px=hw-Math.abs(v.pos.x-o.x), pz=hd-Math.abs(v.pos.z-o.z);
+      if(px<pz){ dx=Math.sign(v.pos.x-o.x)||1; dz=0; dist=0; }
+      else { dx=0; dz=Math.sign(v.pos.z-o.z)||1; dist=0; }
+    }else{ dx/=dist; dz/=dist; }
+    const nx=dx,nz=dz;
+    v.pos.x=cx+nx*r; v.pos.z=cz+nz*r;
+    const into=v.vel.x*nx+v.vel.z*nz;
+    const impact=Math.abs(Math.min(0,into));
+    if(into<0){ v.vel.x-=nx*into*1.3; v.vel.z-=nz*into*1.3; v.vel.multiplyScalar(0.55); }
+    if(impact>2.5){
+      const now=performance.now();
+      if(now-v.lastCrash>180){
+        v.lastCrash=now;
+        const hard=impact>10;
+        Audio2.crash(hard);
+        addShake(clamp(impact/40,0.12,0.6));
+        puffDust(v.pos.x+nx,1.4,v.pos.z+nz,hard?12:6,4,5);
+        puffSpark(v.pos.x,1,v.pos.z,hard?10:4,8);
+        damageVehicle(v,impact*1.1);
+      }
+      // ram damage scales with speed, vehicle ram stat, and obstacle mass
+      const mass=TRAIT[o.type].mass;
+      damageObstacle(o,impact*9*v.def.ram/mass,v.pos.x,v.pos.z);
+      if(o.type==='cell') igniteCell(o);
+      if(active){
+        if(o.type==='cell') tip('Surge cell lit! Clear out — big boom coming.');
+      }
+    }else if(into<0&&o.type!=='prop'){
+      // grinding against a wall slowly still chews it (dozer fantasy)
+      damageObstacle(o,14*v.def.ram*CFG.fixed,v.pos.x,v.pos.z);
+    }
+  }
+}
+// rig advance + blocking
+function updateRig(dt){
+  if(!rig.moving||state!=='play') return;
+  // blocked by any live obstacle overlapping the rig footprint?
+  let blocker=null;
+  const fz=rig.pos.z-rig.len/2-1.2; // nose
+  for(const o of obstacles){
+    if(!o.alive||!o.blocksRig) continue;
+    if(Math.abs(o.x)>CFG.laneHalf+Math.max(0,o.w/2-1)) continue;
+    const oNear=o.z+o.d/2, oFar=o.z-o.d/2;
+    if(oNear>fz-1&&oFar<rig.pos.z+rig.len/2){
+      blocker=o; break;
+    }
+  }
+  // unfilled trench blocks the rig
+  if(!trench.filled&&fz<TRENCH_Z+TRENCH_W/2+8&&rig.pos.z>TRENCH_Z-20){
+    blocker=blocker||{type:'trench',x:0,z:TRENCH_Z};
+  }
+  rig.blocked=!!blocker;
+  if(rig.blocked){
+    if(!rig.wasBlocked){ hurtRig(CFG.blockHit,'RIG IMPACT — CLEAR THE LANE!'); }
+    rig.hull-=CFG.blockDps*dt;
+    Audio2.blocked(dt);
+    $('alarm').classList.add('show');
+    // grind sparks at the nose
+    if(Math.random()<0.5) puffSpark(rig.pos.x+(Math.random()-0.5)*4,1,fz,4,7);
+    rig.mesh.position.x=Math.sin(performance.now()*0.05)*0.09;
+    updateStatusBar();
+    if(rig.hull<=0){ rig.hull=0; lose('HULL BREACH','The rig ground itself to scrap against the wreckage. Clear the lane faster next run.'); }
+  }else{
+    $('alarm').classList.remove('show');
+    rig.mesh.position.x=0;
+    rig.pos.z-=CFG.rigSpeed*dt;
+    rig.mesh.position.z=rig.pos.z;
+    updateStatusBar();
+    if(rig.pos.z<=CFG.finishZ) win();
+  }
+  rig.wasBlocked=rig.blocked;
+  // reactor pulse + beacon flash
+  rig.beaconT+=dt;
+  const m=rig.mesh.userData;
+  if(m.coreMat) m.coreMat.emissiveIntensity=2.4+Math.sin(rig.beaconT*5)*1.1+(rig.blocked?1.2:0);
+  if(m.beaconMat) m.beaconMat.emissiveIntensity=(Math.sin(rig.beaconT*8)>0)?3:0.3;
+}
+
+// ---------- swap / dump / recover ----------
+function nearestOtherVehicle(){
+  let best=null,bd=1e9;
+  for(const v of vehicles){
+    if(v===activeVeh) continue;
+    const d=Math.hypot(v.pos.x-activeVeh.pos.x,v.pos.z-activeVeh.pos.z);
+    if(d<bd){ bd=d; best=v; }
+  }
+  return {v:best,d:bd};
+}
+function trySwap(){
+  const {v,d}=nearestOtherVehicle();
+  if(v&&d<10){
+    setActive(v);
+    Audio2.swap();
+    tip(`Now driving ${v.def.name} — ${v.def.sub}.`);
+  }else{
+    Audio2.beep();
+    tip('No unit in range — drive close to another unit and press E.');
+  }
+}
+function setActive(v){
+  activeVeh=v;
+  for(const u of vehicles) u.mesh.userData.chev.visible=(u===v);
+  updateVehCard();
+}
+function tryDump(){
+  const v=activeVeh;
+  if(v.kind!=='mule'){ tip('Only the MULE carries rubble. Press E near it to swap.'); Audio2.beep(); return; }
+  if(v.load<=0){ tip('MULE bed is empty — smash wrecks to drop rubble, then drive over it.'); Audio2.beep(); return; }
+  if(Math.hypot(v.pos.x-0,v.pos.z-TRENCH_Z)>16){ tip('Too far from the culvert — haul it to the collapsed section.'); Audio2.beep(); return; }
+  if(trench.filled){ tip('Culvert is already bridged.'); return; }
+  trench.fill=Math.min(CFG.fillNeeded,trench.fill+v.load);
+  v.load=0;
+  Audio2.dump();
+  puffDust(0,1,TRENCH_Z,20,7,8);
+  addShake(0.4);
+  if(trench.fill>=CFG.fillNeeded){
+    trench.filled=true; score+=500;
+  }else{
+    banner(`CULVERT ${trench.fill}/${CFG.fillNeeded} — KEEP HAULING`);
+  }
+  updateTrenchMesh(); updateVehCard();
+}
+function recoverActive(){
+  const v=activeVeh;
+  v.vel.set(0,0,0);
+  if(!trench.filled&&Math.abs(v.pos.x)<TRENCH_HALF+3&&Math.abs(v.pos.z-TRENCH_Z)<TRENCH_W/2+4){
+    v.pos.z=TRENCH_Z+(TRENCH_W/2+6);
+  }
+  v.mesh.rotation.set(0,v.heading,0);
+  tip(`${v.def.name} recovered.`);
+}
+
+// ---------- camera + shake ----------
+let camFar=false, shake=0;
+const camPos=new THREE.Vector3(0,30,60), camLook=new THREE.Vector3();
+function addShake(s){ shake=Math.min(1.4,shake+s); }
+function updateCamera(dt){
+  const v=activeVeh;
+  const fwd=fwdVec(v.heading,_f1);
+  const spd=v.vel.length();
+  const dist=camFar?15.5:10.5, h=camFar?8.2:5.6;
+  const tx=v.pos.x-fwd.x*dist, tz=v.pos.z-fwd.z*dist;
+  const k=1-Math.exp(-5*dt);
+  camPos.x+=(tx-camPos.x)*k; camPos.z+=(tz-camPos.z)*k;
+  camPos.y+=(h-camPos.y)*k;
+  shake=Math.max(0,shake-dt*2.2);
+  const sh=shake*shake;
+  const ox=(Math.random()-0.5)*sh*2.4, oy=(Math.random()-0.5)*sh*1.6;
+  camera.position.set(camPos.x+ox,camPos.y+oy,camPos.z);
+  camLook.set(v.pos.x+fwd.x*7,1.6,v.pos.z+fwd.z*7);
+  camera.lookAt(camLook);
+  const wantFov=62+clamp(spd/34,0,1)*12+(input.hb&&spd>8?4:0);
+  camera.fov+=(wantFov-camera.fov)*Math.min(1,4*dt);
+  camera.updateProjectionMatrix();
+  // sun follows player for tight shadows
+  sun.position.set(v.pos.x+60,110,v.pos.z+40);
+  sun.target.position.set(v.pos.x,0,v.pos.z);
+}
+
+// ---------- HUD ----------
+let bannerT=null, tipT=null, vig=0;
+function banner(text,red=false,ms=2300){
+  const b=$('banner');
+  b.textContent=text; b.classList.toggle('red',red); b.classList.add('show');
+  clearTimeout(bannerT); bannerT=setTimeout(()=>b.classList.remove('show'),ms);
+}
+function tip(text,ms=4200){
+  const t=$('tip');
+  t.textContent=text; t.classList.add('show');
+  clearTimeout(tipT); tipT=setTimeout(()=>t.classList.remove('show'),ms);
+}
+function vigFlash(s){ vig=Math.min(1,Math.max(vig,s)); }
+let score=0, clearPct=0;
+function updateClearPct(){
+  const lane=obstacles.filter(o=>o.countsClear);
+  const dead=lane.filter(o=>!o.alive).length+(trench.filled?1:0);
+  clearPct=lane.length?Math.round(100*dead/(lane.length+1)):0;
+  updateStatusBar();
+}
+function updateStatusBar(){
+  const hull=clamp(rig.hull,0,100);
+  $('hullbar').firstElementChild.style.width=hull+'%';
+  $('hullbar').classList.toggle('low',hull<30);
+  $('hullval').textContent=Math.ceil(hull)+'%';
+  const total=Z0-CFG.finishZ, done=clamp(Z0-rig.pos.z,0,total);
+  $('distbar').firstElementChild.style.width=(100*done/total)+'%';
+  $('distval').textContent=Math.round(total-done)+' m';
+  $('clrbar').firstElementChild.style.width=clearPct+'%';
+  $('clrval').textContent=clearPct+'%';
+  document.querySelector('#mapwrap .cap').textContent=`SCORE ${score}`;
+}
+function updateVehCard(){
+  const v=activeVeh, d=v.def;
+  $('vehname').innerHTML=`<small>ACTIVE UNIT · ${d.sub}</small>${d.name}`;
+  $('st-ram').textContent=d.stars[0];
+  $('st-spd').textContent=d.stars[1];
+  $('st-load').textContent=v.kind==='mule'?`${v.load}/${CFG.fillNeeded}`:`${Math.max(0,Math.ceil(v.hp))}%`;
+}
+// minimap
+const mm=$('minimap').getContext('2d');
+function drawMap(){
+  const W=172,H=236;
+  const mx=x=>6+(x+CFG.boundX)/(CFG.boundX*2)*(W-12);
+  const mz=z=>8+(1-(z-40)/(CFG.finishZ-40))*(H-16);
+  mm.fillStyle='#14181c'; mm.fillRect(0,0,W,H);
+  // road + lane
+  mm.fillStyle='#33373c'; mm.fillRect(mx(-7.5),mz(40),mx(7.5)-mx(-7.5),mz(-580)-mz(40));
+  mm.fillStyle='rgba(255,160,46,.35)'; mm.fillRect(mx(-CFG.laneHalf),mz(40),mx(CFG.laneHalf)-mx(-CFG.laneHalf),mz(-580)-mz(40));
+  // finish
+  mm.fillStyle='#2dff6a'; mm.fillRect(mx(-8),mz(CFG.finishZ)-2, mx(8)-mx(-8),4);
+  // trench
+  mm.fillStyle=trench.filled?'#7a5c38':'#000';
+  mm.fillRect(mx(-TRENCH_HALF),mz(TRENCH_Z-5),mx(TRENCH_HALF)-mx(-TRENCH_HALF),mz(TRENCH_Z+5)-mz(TRENCH_Z-5));
+  // obstacles
+  for(const o of obstacles){
+    if(!o.alive||o.type==='prop') continue;
+    mm.fillStyle=o.type==='cell'?'#3fa9ff':'#ff5a3a';
+    const s=Math.max(2.5,o.w*0.55);
+    mm.fillRect(mx(o.x)-s/2,mz(o.z)-s/2,s,s*0.8);
+  }
+  // rubble
+  mm.fillStyle='#ffa02e';
+  for(const r of rubblePickups){ if(!r.taken) mm.fillRect(mx(r.x)-1,mz(r.z)-1,2,2); }
+  // vehicles
+  for(const v of vehicles){
+    mm.fillStyle=v===activeVeh?'#ffffff':'#'+v.def.color.toString(16).padStart(6,'0');
+    mm.beginPath(); mm.arc(mx(v.pos.x),mz(v.pos.z),v===activeVeh?3.4:2.4,0,7); mm.fill();
+  }
+  // rig
+  mm.fillStyle=rig.blocked?'#ff2211':'#ffb02e';
+  mm.fillRect(mx(-3),mz(rig.pos.z)-3, mx(3)-mx(-3),6);
+  mm.fillStyle='#fff';
+  mm.fillRect(mx(rig.pos.x)-1,mz(rig.pos.z)-5,2,2);
+}
+
+// ---------- game state ----------
+let state='title', runTime=0, rigHold=CFG.rigHoldTime, input={th:0,st:0,hb:false};
+let tut={};
+function resetRun(){
+  for(const o of obstacles){
+    o.alive=true; o.hp=o.maxHp; o.fuse=null;
+    o.mesh.visible=true; o.mesh.position.set(o.x,0,o.z);
+    o.rubbleMesh.visible=false;
+  }
+  for(const r of rubblePickups) world.remove(r.m);
+  rubblePickups.length=0;
+  for(const d of debrisPool){ d.life=0; d.m.visible=false; }
+  dust.life.fill(0); spark.life.fill(0);
+  for(let i=0;i<dust.n;i++) dust.pos[i*3+1]=-999;
+  for(let i=0;i<spark.n;i++) spark.pos[i*3+1]=-999;
+  rig.pos.set(0,0,Z0); rig.mesh.position.copy(rig.pos);
+  rig.hull=CFG.rigHull; rig.moving=false; rig.blocked=false; rig.wasBlocked=false;
+  trench.fill=0; trench.filled=false;
+  fillMesh.position.y=-2.6; fillMesh.scale.y=0.6;
+  score=0; runTime=0; rigHold=CFG.rigHoldTime; tut={}; shake=0; vig=0;
+  const sp=[['horn',-3.5,-8],['mule',3.5,-8],['dart',0,-18]];
+  for(const v of vehicles){
+    const s=sp.find(s=>s[0]===v.kind);
+    v.pos.set(s[1],0,s[2]); v.vel.set(0,0,0); v.heading=Math.PI;
+    v.hp=100; v.load=0;
+    v.mesh.position.copy(v.pos); v.mesh.rotation.set(0,Math.PI,0);
+    if(v.mesh.userData.heap) v.mesh.userData.heap.visible=false;
+  }
+  setActive(vehicles[0]);
+  camPos.set(-3.5,5.6,2.5);
+  $('alarm').classList.remove('show');
+  $('banner').classList.remove('show'); $('tip').classList.remove('show');
+  updateClearPct(); updateVehCard(); updateStatusBar();
+}
+function countdown(cb){
+  state='count';
+  const seq=['3','2','1','GO!'];
+  let i=0;
+  const el=$('count');
+  (function next(){
+    if(i<seq.length){
+      el.textContent=seq[i];
+      el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+      Audio2.countGo(seq[i]==='GO!');
+      i++; setTimeout(next,seq[i-1]==='GO!'?700:900);
+    }else{ el.classList.remove('pop'); cb(); }
+  })();
+}
+function startRun(){
+  if(state!=='title') return;
+  Audio2.unlock();
+  $('titlescreen').classList.add('hidden');
+  resetRun();
+  countdown(()=>{
+    state='play';
+    banner('CLEAR THE LANE!');
+    tip('Foot down! Ram the barriers — speed is damage. The rig rolls in a few seconds.',6000);
+  });
+}
+function togglePause(){
+  if(state==='play'){ state='pause'; $('pausescreen').classList.remove('hidden'); Audio2.engine(0,0,false); Audio2.skid(0); }
+  else if(state==='pause'){ state='play'; $('pausescreen').classList.add('hidden'); }
+}
+function restart(){
+  $('winscreen').classList.add('hidden'); $('losescreen').classList.add('hidden');
+  $('pausescreen').classList.add('hidden');
+  Audio2.unlock(); resetRun();
+  countdown(()=>{ state='play'; banner('CLEAR THE LANE!'); });
+}
+function scoreBonus(){ return Math.round(rig.hull*10+Math.max(0,300-runTime)*5); }
+function win(){
+  if(state!=='play') return;
+  state='win'; score+=scoreBonus();
+  Audio2.win();
+  $('wintext').innerHTML=`The Cinder Rig settles into the containment cradle with <b>${Math.ceil(rig.hull)}% hull</b> to spare. Meltdown Mile is open — the Haulbreakers ride again.`;
+  $('w-time').textContent=fmtTime(runTime);
+  $('w-clear').textContent=clearPct+'%';
+  $('w-score').textContent=score;
+  $('winscreen').classList.remove('hidden');
+}
+function lose(title,text){
+  if(state!=='play') return;
+  state='lose';
+  Audio2.lose();
+  shockwave(rig.pos.x,2,rig.pos.z,1.6);
+  puffFire(rig.pos.x,2,rig.pos.z,24); puffSmoke(rig.pos.x,3,rig.pos.z,14);
+  flash.position.set(rig.pos.x,6,rig.pos.z); flashT=1.4;
+  addShake(1.2);
+  $('losetitle').textContent=title;
+  $('losetext').innerHTML=text+` The rig made it <b>${Math.round(Z0-rig.pos.z)} m</b> of <b>${Z0-CFG.finishZ} m</b>.`;
+  $('l-dist').textContent=Math.round(Z0-rig.pos.z)+' m';
+  $('l-clear').textContent=clearPct+'%';
+  $('l-score').textContent=score;
+  setTimeout(()=>$('losescreen').classList.remove('hidden'),900);
+}
+$('startbtn').onclick=startRun;
+$('resumebtn').onclick=togglePause;
+$('restartbtn1').onclick=restart; $('restartbtn2').onclick=restart; $('restartbtn3').onclick=restart;
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&state==='play') togglePause(); });
+
+// tutorial triggers
+function tutorial(dt){
+  runTime+=dt;
+  if(!tut.t1&&runTime>9){ tut.t1=1; tip('Tip: the HORNBACK rams hardest. The DART is fastest. Drive to a unit, press E to swap.'); }
+  if(!tut.rig&&rig.moving){ tut.rig=1; banner('RIG ROLLING — STAY AHEAD!'); }
+  if(!tut.trench&&rig.pos.z<-300){ tut.trench=1;
+    tip('Collapsed culvert ahead! Smash wrecks for rubble, load the MULE (E), dump with F at the gap.',7000); }
+  if(!tut.final&&rig.pos.z<-465){ tut.final=1;
+    tip('Final stretch: twin wreck + towers. Ram surge cells into the big stuff — or ram them and RUN.',7000); }
+  if(!tut.block&&rig.blocked){ tut.block=1;
+    tip('Rig BLOCKED — smash whatever is touching its nose, fast!',5000); }
+  // near-trench reminder with loaded MULE
+  if(activeVeh.kind==='mule'&&activeVeh.load>0&&!trench.filled&&
+     Math.abs(activeVeh.pos.z-TRENCH_Z)<30&&!tut.dump){
+    tut.dump=1; tip('Dump here! Stop by the culvert and press F.',5000);
+  }
+  if(trench.filled) tut.dump=1;
+  // swap hint
+  const {v,d}=nearestOtherVehicle();
+  $('swapmsg').textContent=(v&&d<10)?`Press E: take the ${v.def.name}`:(v&&d<25)?`Nearest unit: ${v.def.name} (${Math.round(d)} m)`:'';
+}
+
+// ---------- main loop ----------
+buildLevel(); buildTrench(); buildRig();
+spawnVehicle('horn',-3.5,-8,Math.PI);
+spawnVehicle('mule',3.5,-8,Math.PI);
+spawnVehicle('dart',0,-18,Math.PI);
+setActive(vehicles[0]);
+camPos.set(-3.5,5.6,2.5);
+updateClearPct(); updateVehCard(); updateStatusBar();
+$('loading').textContent='ready — click START ENGINE (or press Enter).';
+
+let last=performance.now(), acc=0, mapT=0, titleA=0;
+function frame(now){
+  requestAnimationFrame(frame);
+  let dt=Math.min(0.1,(now-last)/1000); last=now;
+  if(state==='title'){
+    // slow orbit behind the start line
+    titleA+=dt*0.12;
+    camera.position.set(Math.sin(titleA)*38,20,-30+Math.cos(titleA*0.7)*20);
+    camera.lookAt(0,2,-80);
+    camera.fov+=(55-camera.fov)*dt; camera.updateProjectionMatrix();
+    rig.beaconT+=dt;
+    if(rig.mesh.userData.beaconMat)
+      rig.mesh.userData.beaconMat.emissiveIntensity=(Math.sin(rig.beaconT*8)>0)?3:0.3;
+    updateRubble(dt);
+    drawMap();
+    renderer.render(scene,camera);
+    return;
+  }
+  if(state==='pause'||state==='win'||state==='lose'){
+    // frozen world, still render (lose shows explosion aftermath briefly)
+    if(state==='lose'){
+      dust.update(dt,2,0.6); spark.update(dt,9,1.2);
+      updateDebris(dt); updateRings(dt);
+      if(flashT>0){ flashT-=dt; flash.intensity=flashT>0?120*flashT:0; }
+      updateCamera(dt);
+      renderer.render(scene,camera);
+    }else{
+      renderer.render(scene,camera);
+    }
+    return;
+  }
+  if(state!=='play'&&state!=='count'){ renderer.render(scene,camera); return; }
+  input=state==='play'?driveInput():{th:0,st:0,hb:false};
+  // fixed-step physics
+  acc+=dt;
+  let n=0;
+  while(acc>=CFG.fixed&&n<5){
+    acc-=CFG.fixed; n++;
+    const iv=updateVehicle(activeVeh,CFG.fixed,input,true);
+    for(const v of vehicles) if(v!==activeVeh) updateVehicle(v,CFG.fixed,input,false);
+    // rig departure delay
+    if(!rig.moving){
+      rigHold-=CFG.fixed;
+      if(rigHold<=0){ rig.moving=true; }
+    }
+    updateRig(CFG.fixed);
+    // surge cell fuses
+    for(const c of cells){
+      if(c.fuse!=null){
+        c.fuse-=CFG.fixed;
+        if(c.glowMat) c.glowMat.emissiveIntensity=1+Math.sin(now*0.06)*1.4;
+        if(Math.random()<0.25) Audio2.fuseTick();
+        if(c.fuse<=0) explodeCell(c);
+      }
+    }
+    activeVeh._iv=iv;
+  }
+  if(n===5) acc=0;
+  // visuals
+  const iv=activeVeh._iv||{fSpeed:0,latSpeed:0};
+  const spd=activeVeh.vel.length();
+  updateCamera(dt);
+  dust.update(dt,2.5,0.8); spark.update(dt,11,1.4);
+  updateDebris(dt); updateRings(dt); updateRubble(dt);
+  // drift smoke + dust kickup
+  if(state==='play'&&spd>7&&(Math.abs(iv.latSpeed)>4||input.hb)){
+    puffDust(activeVeh.pos.x,0.6,activeVeh.pos.z,2,2,2.5);
+  }
+  if(state==='play'&&spd>12&&Math.random()<0.3){
+    puffDust(activeVeh.pos.x,0.4,activeVeh.pos.z,1,1.5,1.5);
+  }
+  // flash decay
+  if(flashT>0){ flashT-=dt*1.6; flash.intensity=flashT>0?140*flashT:0; }
+  // lane pulse + marker bob + chevron
+  window._laneMat.opacity=0.65+Math.sin(now*0.004)*0.25;
+  activeVeh.mesh.userData.chev.position.y=5.2+Math.sin(now*0.005)*0.35;
+  activeVeh.mesh.userData.chev.rotation.y+=dt*2;
+  // exhaust smoke when rig blocked
+  if(rig.blocked&&Math.random()<0.4) puffSmoke(rig.pos.x,5,rig.pos.z-6,1);
+  // audio beds
+  Audio2.engine(spd/34,input.th,state==='play');
+  Audio2.skid(state==='play'?clamp((Math.abs(iv.latSpeed)-3)/10,0,1)*(spd>6?1:0):0);
+  // HUD
+  $('spd').textContent=Math.round(Math.abs(iv.fSpeed)*3.6);
+  $('gear').textContent=iv.fSpeed<-0.5?'REVERSE':input.hb&&spd>4?'DRIFT!':'DRIVE';
+  vig=Math.max(0,vig-dt*1.8);
+  $('vig').style.opacity=vig;
+  if(state==='play') tutorial(dt);
+  mapT-=dt;
+  if(mapT<=0){ mapT=0.1; drawMap(); }
+  renderer.render(scene,camera);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

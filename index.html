@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Muse AI Hub — Playable Muse Spark Games</title>
+  <meta name="description" content="Muse AI Hub: a dashboard and development zone for playable browser games built with Muse Spark. Browse, search, and play.">
+  <link rel="stylesheet" href="assets/css/hub.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff6b1a'/%3E%3Ctext x='6' y='24' font-family='Arial' font-weight='900' font-size='20' fill='%231a0d04'%3EM%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="hazard-bar" aria-hidden="true"></div>
+  <div class="wrap">
+    <header class="masthead">
+      <div>
+        <p class="brand-kicker">Built with Muse Spark</p>
+        <h1 class="brand-title">Muse <span class="thin">AI Hub</span></h1>
+        <p class="brand-sub">
+          A dashboard and development zone for our browser games.
+          Every game is a single HTML file — pick one and play it right here.
+        </p>
+      </div>
+      <div class="stats" aria-label="Hub statistics">
+        <div class="stat">
+          <div class="stat-num" id="stat-games">–</div>
+          <div class="stat-label">Games</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-tags">–</div>
+          <div class="stat-label">Tags</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="toolbar" role="search">
+      <label class="search">
+        <span aria-hidden="true">⌕</span>
+        <input id="search" type="search" placeholder="Search games, tags…" autocomplete="off">
+      </label>
+      <select id="tag-filter" aria-label="Filter by tag">
+        <option value="all">All tags</option>
+      </select>
+      <select id="sort" aria-label="Sort games">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="az">A – Z</option>
+      </select>
+      <button class="btn btn-ghost" id="random" type="button">Surprise me</button>
+    </div>
+
+    <p class="result-line" id="result-line" aria-live="polite">Loading games…</p>
+    <div class="notice" id="notice" hidden></div>
+
+    <main class="grid" id="grid"></main>
+
+    <footer class="footer">
+      <span>Muse AI Hub · games by Muse Spark</span>
+      <span><a href="https://github.com/michaelcrosato/muse-ai-hub">GitHub</a> · add a game: drop an .html file in <span>games/</span> + one JSON entry</span>
+    </footer>
+  </div>
+
+  <script src="assets/js/hub.js" defer></script>
+</body>
+</html>
