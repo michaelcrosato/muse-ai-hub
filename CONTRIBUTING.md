@@ -22,8 +22,13 @@ there are 7 games or 700.
      --title "Your Game Title" \
      --description "One or two sentences, shown on the card." \
      --tags arcade,driving \
-     --controls "Arrows / WASD + Space"
+     --controls "Arrows / WASD + Space" \
+     --renderer webgl2
    ```
+
+   (`--renderer` is the minimum renderer the boot gate requires: `2d`,
+   `webgl`, `webgl2`, or `webgpu`. Add `--prefer webgpu` when the game
+   prefers one renderer but falls back to another.)
 
    Entry schema:
 
@@ -38,18 +43,38 @@ there are 7 games or 700.
    | `controls`    | no       | One-line hint shown in the player header.                    |
    | `engine`      | no       | e.g. `Muse Spark`.                                           |
 
-3. **Validate**
+3. **Wire the boot loader**
+
+   Every game carries the MUSE SPARK BIOS boot screen (env checks, renderer
+   probe, progress with step codes, screenshot-friendly failure report):
+
+   ```bash
+   node scripts/inject-boot.mjs --game <id>
+   ```
+
+   Set `boot.renderer` in `games.json` to the minimum your game needs
+   (`2d`, `webgl`, `webgl2`, `webgpu`; optional `boot.prefer` for the
+   preferred-with-fallback renderer). Start from `boot/template.html` for new
+   games — it shows the one-line gate your module script needs:
+   `await window.MuseBoot.gameReady();`
+
+4. **Validate**
 
    ```bash
    node scripts/add-game.mjs --check
+   node scripts/inject-boot.mjs --check
+   node --test tests/boot.test.mjs
    ```
 
-   This checks schema, duplicate ids, and that every referenced file exists.
+   This checks schema, duplicate ids, file existence, current boot blocks in
+   every game, and the boot loader's own test suite.
 
-4. **Playtest**
+5. **Playtest**
 
    Serve the repo locally and open `play.html?id=<your-id>`, plus the card on
    `index.html`. Confirm search finds the title and the tag filter lists it.
+   Watch the boot screen once; break something on purpose (e.g. `?noboot=1`
+   skips pacing, blocking the CDN in devtools shows the failure report).
 
 ## Conventions
 

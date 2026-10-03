@@ -34,9 +34,10 @@ Then open `http://localhost:8080` in a browser.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Short version:
 
-1. Copy your game file into `games/`.
-2. Register it: `node scripts/add-game.mjs --add games/your-game.html --title "Your Title" --tags arcade,driving`
-3. Check it: `node scripts/add-game.mjs --check`, then playtest via `play.html?id=<id>`.
+1. Copy your game file into `games/` (or start from `boot/template.html`).
+2. Register it: `node scripts/add-game.mjs --add games/your-game.html --title "Your Title" --tags arcade,driving --renderer webgl2`
+3. Wire the boot screen: `node scripts/inject-boot.mjs --game <id>`
+4. Check it: `node scripts/add-game.mjs --check && node scripts/inject-boot.mjs --check && node --test tests/boot.test.mjs`, then playtest via `play.html?id=<id>`.
 
 ## Deploy (Vercel)
 

@@ -1,0 +1,110 @@
+/* MUSE SPARK BIOS — boot overlay styles. Dependency-free, prefixed `mb-`. */
+.mb {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: #0b0a08;
+  color: #ffb000;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  font-size: clamp(12px, 1.6vw, 15px);
+  line-height: 1.55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.mb[hidden] { display: none; }
+
+.mb-term {
+  width: min(680px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border: 2px solid #ffb000;
+  background: #0b0a08;
+  padding: 18px 20px;
+  box-shadow: 0 0 0 4px #0b0a08, 0 0 0 5px #5c3d00;
+}
+
+.mb-head {
+  color: #ffd97a;
+  font-weight: 700;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+.mb-static { color: #ffb000; white-space: pre-wrap; }
+
+.mb-log { margin: 8px 0; white-space: pre-wrap; word-break: break-word; }
+
+.mb-line-ok { color: #7fc86b; }
+.mb-line-fail { color: #ff5d5d; }
+.mb-line-dim { color: #8a6d2f; }
+.mb-line-info { color: #ffd97a; }
+
+.mb-progress {
+  height: 18px;
+  border: 1px solid #ffb000;
+  margin: 10px 0 4px;
+  padding: 2px;
+}
+
+.mb-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #ffb000;
+}
+
+.mb-failed .mb-bar-fill { background: #ff5d5d; }
+.mb-failed .mb-term { border-color: #ff5d5d; }
+
+.mb-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #ffd97a;
+  margin-bottom: 6px;
+}
+
+.mb-cursor::after {
+  content: "▊";
+  animation: mb-blink 1s steps(1) infinite;
+}
+
+.mb-fail { margin-top: 12px; border-top: 1px dashed #ff5d5d; padding-top: 12px; }
+.mb-fail[hidden] { display: none; }
+
+.mb-fail-title { color: #ff5d5d; font-weight: 700; margin-bottom: 6px; }
+
+.mb-report {
+  background: #160f0a;
+  border: 1px solid #5c3d00;
+  padding: 10px 12px;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ffd97a;
+  font-size: 0.92em;
+  margin: 8px 0;
+}
+
+.mb-btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+
+.mb-btn {
+  cursor: pointer;
+  font: inherit;
+  background: #ffb000;
+  color: #1a0d04;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 700;
+}
+
+.mb-btn-ghost { background: transparent; color: #ffb000; border: 1px solid #ffb000; }
+
+@keyframes mb-blink { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-cursor::after { animation: none; }
+}

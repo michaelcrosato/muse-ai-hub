@@ -21,6 +21,7 @@ if (args.includes("--help") || args.includes("-h") || args.length === 0) {
 
 Options for --add:
   --id <slug>            defaults to filename slug
+  --renderer <name>      2d, webgl, webgl2 (default), or webgpu
   --title <title>        required
   --description <text>   card blurb
   --tags <a,b,c>         comma-separated lowercase tags
@@ -79,6 +80,12 @@ function validate(manifest) {
     if (g.added !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(g.added)) {
       errors.push(`"${g.id}": added must be YYYY-MM-DD`);
     }
+    if (!g.boot || !["2d", "webgl", "webgl2", "webgpu"].includes(g.boot.renderer)) {
+      errors.push(`"${g.id}": boot.renderer must be one of 2d, webgl, webgl2, webgpu`);
+    }
+    if (g.boot && g.boot.prefer !== undefined && !["2d", "webgl", "webgl2", "webgpu"].includes(g.boot.prefer)) {
+      errors.push(`"${g.id}": boot.prefer must be one of 2d, webgl, webgl2, webgpu`);
+    }
   }
   return errors;
 }
@@ -121,10 +128,21 @@ function addGame(flags) {
     console.error(`Error: id "${id}" already exists.`);
     process.exit(1);
   }
+  const renderer = typeof flags.renderer === "string" ? flags.renderer : "webgl2";
+  if (!["2d", "webgl", "webgl2", "webgpu"].includes(renderer)) {
+    console.error(`Error: bad --renderer "${renderer}" (2d, webgl, webgl2, webgpu).`);
+    process.exit(1);
+  }
+  const prefer = typeof flags.prefer === "string" ? flags.prefer : null;
+  if (prefer && !["2d", "webgl", "webgl2", "webgpu"].includes(prefer)) {
+    console.error(`Error: bad --prefer "${prefer}" (2d, webgl, webgl2, webgpu).`);
+    process.exit(1);
+  }
   manifest.games.push({
     id,
     title: flags.title.trim(),
     file: name,
+    boot: prefer ? { renderer, prefer } : { renderer },
     description: typeof flags.description === "string" ? flags.description : "",
     tags: typeof flags.tags === "string"
       ? flags.tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)

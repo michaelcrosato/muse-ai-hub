@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Meltdown Express — Harbor Break (vertical slice)</title>
     <style>html,body{margin:0;background:#101216;color:#ffb400;font-family:Arial,sans-serif}#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;letter-spacing:3px;font-size:14px}</style>
-    <script type="module" crossorigin>(function(){const A=document.createElement("link").relList;if(A&&A.supports&&A.supports("modulepreload"))return;for(const C of document.querySelectorAll('link[rel="modulepreload"]'))g(C);new MutationObserver(C=>{for(const Q of C)if(Q.type==="childList")for(const E of Q.addedNodes)E.tagName==="LINK"&&E.rel==="modulepreload"&&g(E)}).observe(document,{childList:!0,subtree:!0});function I(C){const Q={};return C.integrity&&(Q.integrity=C.integrity),C.referrerPolicy&&(Q.referrerPolicy=C.referrerPolicy),C.crossOrigin==="use-credentials"?Q.credentials="include":C.crossOrigin==="anonymous"?Q.credentials="omit":Q.credentials="same-origin",Q}function g(C){if(C.ep)return;C.ep=!0;const Q=I(C);fetch(C.href,Q)}})();/**
+    <script type="module" crossorigin>
+/*MUSE-BOOT-GATE v1.0.0*/ await window.MuseBoot.gameReady();
+(function(){const A=document.createElement("link").relList;if(A&&A.supports&&A.supports("modulepreload"))return;for(const C of document.querySelectorAll('link[rel="modulepreload"]'))g(C);new MutationObserver(C=>{for(const Q of C)if(Q.type==="childList")for(const E of Q.addedNodes)E.tagName==="LINK"&&E.rel==="modulepreload"&&g(E)}).observe(document,{childList:!0,subtree:!0});function I(C){const Q={};return C.integrity&&(Q.integrity=C.integrity),C.referrerPolicy&&(Q.referrerPolicy=C.referrerPolicy),C.crossOrigin==="use-credentials"?Q.credentials="include":C.crossOrigin==="anonymous"?Q.credentials="omit":Q.credentials="same-origin",Q}function g(C){if(C.ep)return;C.ep=!0;const Q=I(C);fetch(C.href,Q)}})();/**
  * @license
  * Copyright 2010-2023 Three.js Authors
  * SPDX-License-Identifier: MIT
@@ -3752,8 +3754,1048 @@ void main() {
       <div class="btn-row"><button class="btn" id="btn-again">RUN IT AGAIN</button></div>
     </div></div></div>`,A.appendChild(this.root);const I=g=>this.root.querySelector(`#${g}`);for(const g of["loading-veil","load-status","hud","hud-time","hud-hull","integrity-fill","progress-fill","progress-truck","blocked-banner","toast-stack","hud-vehicle","hud-speed","hud-score","interact-prompt","hint-bar","damage-vignette","screen-title","screen-brief","screen-pause","screen-end","end-kicker","end-title","end-reason","end-stats","mute-btn","touch-ui"])this.els[g]=I(g);this.minimap=I("minimap"),this.mmCtx=this.minimap.getContext("2d"),I("btn-start").onclick=()=>this.onStart(),I("btn-go").onclick=()=>this.onStart(),I("btn-resume").onclick=()=>this.onResume(),I("btn-quit").onclick=()=>this.onRestart(),I("btn-again").onclick=()=>this.onRestart(),I("mute-btn").onclick=()=>this.onMute(),I("pause-btn").onclick=()=>this.onPauseBtn(),I("t-act").onclick=()=>this.onEnterTouch()}bindTouch(A){const I=C=>this.root.querySelector(`#${C}`),g=[["t-left","left"],["t-right","right"],["t-gas","gas"],["t-brake","brake"]];for(const[C,Q]of g){const E=I(C);E.addEventListener("touchstart",i=>{i.preventDefault(),A[Q]=!0},{passive:!1}),E.addEventListener("touchend",i=>{i.preventDefault(),A[Q]=!1},{passive:!1})}}setLoading(A){A===null?this.els["loading-veil"].classList.add("hidden"):this.els["load-status"].textContent=A}showScreen(A){for(const g of["title","brief","pause","end"])this.els[`screen-${g}`].classList.toggle("hidden",g!==A);this.els["touch-ui"].classList.toggle("ingame",A===null);const I=A==="title"?"btn-start":A==="brief"?"btn-go":A==="pause"?"btn-resume":A==="end"?"btn-again":null;I&&window.setTimeout(()=>this.root.querySelector(`#${I}`)?.focus(),50)}setHudVisible(A){this.els.hud.classList.toggle("visible",A)}setTime(A){const I=Math.max(0,Math.ceil(A));this.els["hud-time"].textContent=`${Math.floor(I/60)}:${String(I%60).padStart(2,"0")}`,this.els["hud-time"].style.color=A<30?"#ff3b30":"#fff"}setHull(A){this.els["hud-hull"].innerHTML=`${Math.max(0,Math.round(A))}<small>%</small>`;const I=this.els["integrity-fill"];I.style.width=`${Math.max(0,A)}%`,I.className=A<25?"crit":A<55?"warn":"",this.els["integrity-fill"].id="integrity-fill"}setProgress(A){this.els["progress-fill"].style.width=`${Math.min(100,A*100)}%`,this.els["progress-truck"].style.left=`calc(${Math.min(1,A)*100}% - 2px)`}setVehicle(A,I){this.els["hud-vehicle"].textContent=A,this.els["hud-speed"].textContent=`${Math.round(Math.abs(I))} KM/H`}setScore(A){this.els["hud-score"].textContent=String(A)}setBlocked(A){this.els["blocked-banner"].classList.toggle("visible",A)}setPrompt(A){const I=this.els["interact-prompt"];A===null?I.classList.remove("visible"):(I.textContent=A,I.classList.add("visible"))}setHint(A){this.els["hint-bar"].innerHTML=A}flashDamage(){const A=this.els["damage-vignette"];A.style.transition="none",A.style.opacity="1",requestAnimationFrame(()=>{A.style.transition="opacity 0.6s",A.style.opacity="0"})}toast(A,I=""){const g=this.els["toast-stack"],C=document.createElement("div");for(C.className=`toast ${I}`,C.textContent=A,g.appendChild(C);g.children.length>4;)g.removeChild(g.firstChild);const Q=window.setTimeout(()=>{C.style.opacity="0",setTimeout(()=>C.remove(),400)},2600);this.toastTimers.push(Q)}setMute(A){this.muted=A,this.els["mute-btn"].textContent=A?"SOUND: OFF":"SOUND: ON"}showEnd(A){const I=this.els["end-title"];I.textContent=A.win?"COOLANT REACHED":"EXPRESS LOST",I.className=A.win?"win":"lose",this.els["end-kicker"].textContent=A.win?"MISSION COMPLETE":"MISSION FAILED",this.els["end-reason"].textContent=A.reason;const g=[["Final score",String(A.score)],["Buildings demolished",String(A.demolished)],["Obstacles cleared",String(A.cleared)],["Route progress",`${Math.round(A.progress*100)}%`],["Hull remaining",`${Math.round(A.integrity)}%`],["Time remaining",`${Math.max(0,Math.ceil(A.timeLeft))}s`]];this.els["end-stats"].innerHTML=g.map(([C,Q])=>`<tr><td>${C}</td><td>${Q}</td></tr>`).join(""),this.showScreen("end")}drawMinimap(A){const I=this.mmCtx,g=208,C=208,Q=-190,E=190,i=t=>(t-Q)/(E-Q)*g,o=t=>(t-Q)/(E-Q)*C;I.fillStyle="#0d1114",I.fillRect(0,0,g,C),I.fillStyle="#14333d",I.fillRect(i(104),0,g-i(104),C),I.strokeStyle="#ff5a1f",I.lineWidth=3,I.beginPath(),A.route.forEach((t,e)=>{e===0?I.moveTo(i(t.x),o(t.z)):I.lineTo(i(t.x),o(t.z))}),I.stroke();for(const t of A.buildings){if(!t.standing)continue;I.fillStyle=t.onRoute?"#ff3b30":"#5a636d";const e=Math.max(2,t.r/(E-Q)*g*1.4);I.fillRect(i(t.x)-e/2,o(t.z)-e/2,e,e)}I.fillStyle="#ffb400";for(const t of A.obstacles)t.cleared||I.fillRect(i(t.x)-1.5,o(t.z)-1.5,3,3);I.fillStyle="#35e0a1",I.beginPath(),I.arc(i(A.station.x),o(A.station.z),5,0,Math.PI*2),I.fill();for(const t of A.vehicles)I.fillStyle=t.color,I.beginPath(),I.arc(i(t.x),o(t.z),t.active?4:3,0,Math.PI*2),I.fill(),t.active&&(I.strokeStyle="#fff",I.lineWidth=1.5,I.stroke());I.fillStyle="#ffe27a",I.beginPath(),I.arc(i(A.carrier.x),o(A.carrier.z),5,0,Math.PI*2),I.fill(),I.strokeStyle="#ff5a1f",I.lineWidth=2,I.stroke(),A.onFoot&&(I.fillStyle="#fff",I.beginPath(),I.arc(i(A.player.x),o(A.player.z),3,0,Math.PI*2),I.fill())}}const mN=300,TN=7,xN=3.5;class bN{renderer;scene=new Xn;camera;world;input=new cN;audio=new MN;ui;particles;route=me();routeLen=1;routeSamples=[];vehicles=[];activeVehicle=0;onFoot=!1;playerBody=null;playerMesh;playerHeading=0;footVel=new Y;buildings=[];obstacles=[];debris=[];debrisGeo=new AI(1,1,1);carrierBody;carrierMesh;carrierCore;carrierBeacons=[];carrierS=0;carrierPos=new Y;carrierFwd=new Y(0,0,1);carrierHeading=0;stationPos=new Y;state="title";timeLeft=mN;integrity=100;score=0;demolished=0;cleared=0;checkpoints=[!1,!1,!1];blocked=!1;shake=0;camPos=new Y(-160,30,-90);camLook=new Y;clock=new QS;acc=0;mmTimer=0;crashCooldown=0;prevSpeed=0;hintTimer=0;sun;beaconTimer=0;container;constructor(A){this.container=A,this.ui=new uN(A),this.ui.onStart=()=>this.startFromUi(),this.ui.onRestart=()=>location.reload(),this.ui.onResume=()=>this.togglePause(!1),this.ui.onMute=()=>this.toggleMute(),this.ui.onPauseBtn=()=>{this.state==="playing"?this.togglePause(!0):this.state==="paused"&&this.togglePause(!1)},this.ui.onEnterTouch=()=>this.tryEnterExit(),this.ui.bindTouch(this.input.touch)}async init(){if(this.ui.setLoading("STARTING RENDERER (WebGL2)…"),this.renderer=new ge({antialias:!0,powerPreference:"high-performance"}),!this.renderer.capabilities.isWebGL2)throw this.ui.setLoading("WebGL2 UNAVAILABLE — THIS BUILD HAS NO FALLBACK"),new Error("WebGL2 required");this.renderer.setSize(window.innerWidth,window.innerHeight),this.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2)),this.renderer.shadowMap.enabled=!0,this.renderer.shadowMap.type=Mt,this.renderer.outputColorSpace=KI,this.renderer.toneMapping=yt,this.renderer.toneMappingExposure=1.05,this.renderer.domElement.classList.add("game"),this.container.appendChild(this.renderer.domElement),this.scene.background=new OA(10470360),this.scene.fog=new fE(10470360,120,420),this.camera=new Cg(62,window.innerWidth/window.innerHeight,.1,900);const A=new IS(12573162,5922634,.85);this.scene.add(A),this.sun=new BS(16773590,2),this.sun.position.set(60,110,40),this.sun.castShadow=!0,this.sun.shadow.mapSize.set(2048,2048),this.sun.shadow.camera.left=-70,this.sun.shadow.camera.right=70,this.sun.shadow.camera.top=70,this.sun.shadow.camera.bottom=-70,this.sun.shadow.camera.far=320,this.sun.shadow.bias=-4e-4,this.scene.add(this.sun),this.scene.add(this.sun.target),window.addEventListener("resize",()=>{this.camera.aspect=window.innerWidth/window.innerHeight,this.camera.updateProjectionMatrix(),this.renderer.setSize(window.innerWidth,window.innerHeight)}),document.addEventListener("visibilitychange",()=>{document.hidden&&this.state==="playing"&&this.togglePause(!0)}),this.ui.setLoading("LOADING PHYSICS (rapier3d-simd)…");const I=aI.init;typeof I=="function"&&await I(),this.world=new aI.World({x:0,y:-14,z:0}),this.world.timestep=1/60,this.ui.setLoading("BUILDING HARBOR…"),this.particles=new GN(this.scene),FN(this.scene,this.world),this.routeLen=LN(this.scene,this.route),qN(this.scene);for(let Q=0;Q<=60;Q++)this.routeSamples.push(this.route.getPointAt(Q/60));this.buildCarrier(),this.buildLevelEntities(),this.buildPlayerMesh();for(let Q=0;Q<90;Q++)this.world.step();for(const Q of this.vehicles)Q.syncMesh(0,0);for(const Q of this.obstacles)rt(Q);const g=this.route.getPointAt(1),C=this.route.getTangentAt(1).normalize();this.stationPos.set(g.x,0,g.z),fN(this.scene,g.x,g.z,Math.atan2(-C.x,-C.z)),this.ui.setLoading(null),this.ui.showScreen("title"),this.clock.start(),this.renderer.setAnimationLoop(()=>this.frame())}at(A,I){const g=this.route.getPointAt(A),C=this.route.getTangentAt(A).normalize();return{x:g.x-C.z*I,z:g.z+C.x*I,heading:Math.atan2(-C.x,-C.z),tan:C}}buildLevelEntities(){const A=[{s:.14,x:0,z:0,w:18,h:9,d:14,toughness:.35,kind:"warehouse",onRoute:!0},{s:.3,x:0,z:0,w:14,h:16,d:12,toughness:.55,kind:"office",onRoute:!0},{s:.45,x:0,z:0,w:16,h:7,d:12,toughness:.3,kind:"tank",explosive:!0,onRoute:!0},{s:.62,x:0,z:0,w:20,h:22,d:15,toughness:.8,kind:"apartments",onRoute:!0},{s:.8,x:0,z:0,w:12,h:7,d:10,toughness:.45,kind:"gatehouse",onRoute:!0}],I=[2,-2,0,1,-1];A.forEach((i,o)=>{const t=this.at(i.s,I[o]);i.x=t.x,i.z=t.z,i.rotY=0,this.buildings.push(nt(this.scene,this.world,i))});const g=[[.22,30,{s:.22,x:0,z:0,w:14,h:8,d:12,toughness:.3,kind:"warehouse",onRoute:!1}],[.5,30,{s:.5,x:0,z:0,w:12,h:14,d:11,toughness:.5,kind:"office",onRoute:!1}],[.7,28,{s:.7,x:0,z:0,w:16,h:18,d:13,toughness:.65,kind:"apartments",onRoute:!1}],[.9,-26,{s:.9,x:0,z:0,w:10,h:6,d:9,toughness:.35,kind:"gatehouse",onRoute:!1}]];for(const[i,o,t]of g){const e=this.at(i,o);t.x=e.x,t.z=e.z,t.rotY=0,this.buildings.push(nt(this.scene,this.world,t))}let C=0;const Q=(i,o,t)=>{const e=this.at(o,t);this.obstacles.push(HN(this.scene,this.world,i,e.x,e.z,e.heading,C++))};Q("barrier",.05,-2.5),Q("barrier",.05,0),Q("barrier",.05,2.5),Q("crate",.2,-2),Q("crate",.205,1.5),Q("crate",.215,-.5),Q("crate",.21,3.5),Q("crate",.195,-4),Q("container",.36,-3),Q("container",.365,3),Q("boulder",.5,1.5),Q("boulder",.505,-2.5),Q("container",.55,.5),Q("barrier",.68,-2.5),Q("barrier",.68,.5),Q("barrier",.685,3),Q("container",.72,-2.5),Q("container",.725,2.5),Q("crate",.86,-2),Q("crate",.865,.5),Q("crate",.87,3),Q("crate",.855,-4.5),Q("boulder",.93,0),[["dozer",.015,-13],["buggy",.03,13],["tipper",.33,15],["dozer",.58,-15],["tipper",.78,14]].forEach(([i,o,t],e)=>{const s=this.at(o,t);this.vehicles.push(new UN(e,i,this.world,this.scene,s.x,s.z,s.heading))})}buildCarrier(){const A=new hg,I=new dA({color:2829875,roughness:.5,metalness:.4}),g=new MA(new AI(3.4,2.6,3.2),I);g.position.set(0,2.1,-6.2),g.castShadow=!0,A.add(g);const C=new MA(new AI(3,1,.3),new dA({color:10475752,roughness:.3,metalness:.6}));C.position.set(0,2.4,-7.85),A.add(C);const Q=new MA(new AI(3.8,1.4,.5),I);Q.position.set(0,1,-8.1),A.add(Q);const E=new MA(new AI(3.6,.6,10),new dA({color:4869717,roughness:.7}));E.position.set(0,1.2,.5),E.castShadow=!0,A.add(E);const i=new MA(new cg(1.7,1.7,6.5,20),new dA({color:9080724,roughness:.35,metalness:.7}));i.rotation.x=Math.PI/2,i.position.set(0,3.1,.8),i.castShadow=!0,A.add(i);for(const S of[-1.5,.8,3.1]){const r=new MA(new TE(1.75,.16,10,24),new dA({color:16757760,roughness:.5}));r.position.set(0,3.1,S),A.add(r)}this.carrierCore=new dA({color:3530913,emissive:3530913,emissiveIntensity:2.2});for(const S of[-1.72,1.72]){const r=new MA(new AI(.1,.8,5.2),this.carrierCore);r.position.set(S,3.1,.8),A.add(r)}for(const S of[-1.4,1.4]){const r=new MA(new AI(.3,.3,.3),new dA({color:16734751,emissive:16726832,emissiveIntensity:2}));r.position.set(S,3.7,-6.2),A.add(r),this.carrierBeacons.push(r)}const o=new cg(.7,.7,.5,12);o.rotateZ(Math.PI/2);const t=new dA({color:1776928,roughness:.9});for(const[S,r]of[[-1.7,-6.2],[1.7,-6.2],[-1.7,-1.5],[1.7,-1.5],[-1.7,3.5],[1.7,3.5]]){const n=new MA(o,t);n.position.set(S,.7,r),A.add(n)}const e=new MA(new AI(3.7,.5,10.2),new dA({color:16734751,roughness:.6}));e.position.set(0,.45,.5),A.add(e),this.scene.add(A),this.carrierMesh=A;const s=this.route.getPointAt(0),a=this.route.getTangentAt(0).normalize();this.carrierPos.set(s.x,0,s.z),this.carrierFwd.copy(a),this.carrierHeading=Math.atan2(-a.x,-a.z);const h=this.world.createRigidBody(aI.RigidBodyDesc.kinematicPositionBased().setTranslation(s.x,2.2,s.z).setRotation({x:0,y:Math.sin(this.carrierHeading/2),z:0,w:Math.cos(this.carrierHeading/2)}));this.world.createCollider(aI.ColliderDesc.cuboid(2,2,6).setFriction(.4),h),this.carrierBody=h,this.syncCarrierMesh(0)}buildPlayerMesh(){const A=new hg,I=new dA({color:16742972,roughness:.8}),g=new MA(new cg(.32,.36,1,10),I);g.position.y=.9,g.castShadow=!0,A.add(g);const C=new MA(new qC(.26,12,10),new dA({color:15911328,roughness:.7}));C.position.y=1.7,C.castShadow=!0,A.add(C);const Q=new MA(new qC(.3,12,8,0,Math.PI*2,0,Math.PI/2),new dA({color:16757760,roughness:.5}));Q.position.y=1.74,A.add(Q);const E=new MA(new AI(.12,.1,.08),new dA({color:16774857,emissive:16772528,emissiveIntensity:1.5}));E.position.set(0,1.95,.24),A.add(E),A.visible=!1,this.scene.add(A),this.playerMesh=A}startFromUi(){this.audio.init(),this.audio.uiClick(),this.state==="title"?(this.state="brief",this.ui.showScreen("brief")):this.state==="brief"&&(this.state="playing",this.ui.showScreen(null),this.ui.setHudVisible(!0),this.ui.toast("CLEAR THE CORRIDOR — GO!","good"),this.ui.setHint("<b>W/S</b> drive &nbsp;·&nbsp; <b>E</b> swap rigs &nbsp;·&nbsp; <b>R</b> flip rig &nbsp;·&nbsp; Ram buildings at speed!"),this.clock.getDelta())}togglePause(A){A&&this.state==="playing"?(this.state="paused",this.ui.showScreen("pause"),this.audio.uiClick(),this.audio.engine(0,0,!0,0)):!A&&this.state==="paused"&&(this.state="playing",this.ui.showScreen(null),this.audio.uiClick(),this.clock.getDelta())}toggleMute(){this.audio.init(),this.audio.setMuted(!this.audio.muted),this.ui.setMute(this.audio.muted)}tryEnterExit(){if(this.state==="playing")if(this.onFoot){const A=this.playerBody.translation();let I=-1,g=4.5;this.vehicles.forEach((C,Q)=>{const E=Math.hypot(C.pos.x-A.x,C.pos.z-A.z);E<g&&(g=E,I=Q)}),I>=0&&(this.activeVehicle=I,this.prevSpeed=0,this.onFoot=!1,this.playerMesh.visible=!1,this.removePlayer(),this.audio.pickup(),this.ui.toast(`${this.vehicles[I].spec.name} — ROLLING`,"good"))}else{const A=this.vehicles[this.activeVehicle],I=A.pos,g=I.x+Math.cos(A.heading)*3.2,C=I.z-Math.sin(A.heading)*3.2;this.spawnPlayer(g,C),this.onFoot=!0,this.playerMesh.visible=!0,this.prevSpeed=0,A.idle(1),this.audio.uiClick(),this.ui.setHint("On foot — walk to another rig and press <b>E</b> to drive it.")}}spawnPlayer(A,I){this.removePlayer();const g=this.world.createRigidBody(aI.RigidBodyDesc.dynamic().setTranslation(A,1.2,I).setLinearDamping(2.5).enabledRotations(!1,!1,!1).setCcdEnabled(!0));this.world.createCollider(aI.ColliderDesc.capsule(.5,.35).setDensity(1).setFriction(1.2),g),this.playerBody=g}removePlayer(){if(this.playerBody){try{this.world.removeRigidBody(this.playerBody)}catch{}this.playerBody=null}}requiredSpeed(A,I){return Math.max(2.5,4+A*15-I*9)}demolish(A,I){if(!A.standing)return;YN(this.world,this.scene,A),this.demolished++,this.score+=A.points;const g=A.def.x,C=A.def.z;if(this.particles.debrisBurst(g,1,C,A.color,A.def.h>12),this.spawnDebris(g,C,A),A.def.explosive){this.audio.explosion(),this.particles.explosion(g,1,C),this.shake=Math.min(1.4,this.shake+1),this.score+=500,this.ui.toast("FUEL FARM DETONATED! +500","good");for(const E of this.buildings)E.standing&&Math.hypot(E.def.x-g,E.def.z-C)<24&&E!==A&&this.demolish(E,"chain");const Q=(E,i,o,t)=>{const e=E-g,s=i-C,a=Math.max(2,Math.hypot(e,s));if(a>26)return;const h=(26-a)*14/Math.max(1,t);o.applyImpulse({x:e/a*h,y:h*.5,z:s/a*h},!0)};for(const E of this.obstacles){const i=E.body.translation();Q(i.x,i.z,E.body,2)}for(const E of this.vehicles){const i=E.body.translation();Q(i.x,i.z,E.body,6)}}else this.audio.demolish(A.def.h>12),this.shake=Math.min(1.2,this.shake+(A.def.h>12?.55:.3)),this.ui.toast(`${I==="ram"?"DEMOLISHED":"DESTROYED"} +${A.points}`,"good")}spawnDebris(A,I,g){const C=Math.min(14,6+Math.round(g.def.w*g.def.h/28));for(let Q=0;Q<C;Q++){if(this.debris.length>130){const n=this.debris.shift();try{this.world.removeRigidBody(n.body)}catch{}this.scene.remove(n.mesh),n.mesh.material.dispose()}const E=.5+Math.random()*1.4,i=.4+Math.random()*1,o=.5+Math.random()*1.4,t=A+(Math.random()-.5)*g.def.w*.7,e=I+(Math.random()-.5)*g.def.d*.7,s=this.world.createRigidBody(aI.RigidBodyDesc.dynamic().setTranslation(t,2+Math.random()*g.def.h*.5,e).setLinearDamping(.4).setAngularDamping(.8));this.world.createCollider(aI.ColliderDesc.cuboid(E/2,i/2,o/2).setDensity(1.2).setFriction(.9),s);const a=Math.random()*Math.PI*2;s.applyImpulse({x:Math.cos(a)*6,y:4+Math.random()*5,z:Math.sin(a)*6},!0);const h=.7+Math.random()*.5,S=new OA(g.color).multiplyScalar(h),r=new MA(this.debrisGeo,new dA({color:S,roughness:.9}));r.scale.set(E,i,o),r.castShadow=!0,this.scene.add(r),this.debris.push({body:s,mesh:r,life:14})}}frame(){const A=Math.min(this.clock.getDelta(),.1);if(this.state==="playing")this.input.poll(A),this.input.pausePressed?(this.togglePause(!0),this.input.consumePause()):this.input.mutePressed?this.toggleMute():(this.input.enterPressed&&this.tryEnterExit(),this.update(A));else if(this.state==="paused")this.input.poll(A),this.input.pausePressed?(this.togglePause(!1),this.input.consumePause()):this.input.mutePressed&&this.toggleMute();else if(this.state==="over")this.particles.update(A),this.shake=Math.max(0,this.shake-A*1.5);else if(this.state==="title"||this.state==="brief"){const I=this.clock.elapsedTime*.1;this.camera.position.set(this.carrierPos.x+Math.cos(I)*26,12,this.carrierPos.z+Math.sin(I)*26),this.camera.lookAt(this.carrierPos.x,3,this.carrierPos.z),this.particles.update(A),this.animateCarrierIdle(A)}this.renderer.render(this.scene,this.camera)}update(A){if(this.timeLeft-=A,this.timeLeft<=0)return this.endGame(!1,"The coolant window closed. The Express cooked off in the harbor.");if(this.crashCooldown=Math.max(0,this.crashCooldown-A),this.hintTimer+=A,this.updateBlockState(),this.blocked){if(this.integrity-=xN*A,this.audio.blockedAlarm(A),Math.random()<A*12&&this.particles.sparks(this.carrierPos.x+this.carrierFwd.x*8,1.5,this.carrierPos.z+this.carrierFwd.z*8,4),this.integrity<=0)return this.integrity=0,this.endGame(!1,"The Express hull failed while blocked. Harbor Break is now a crater.")}else{if(this.carrierS+=TN*A/this.routeLen,this.carrierS>=.985)return this.endGame(!0,"The Express rolled into the coolant plant with seconds to spare. Harbor saved — invoice the city.");[.25,.5,.75].forEach((Q,E)=>{!this.checkpoints[E]&&this.carrierS>=Q&&(this.checkpoints[E]=!0,this.score+=500,this.audio.checkpoint(),this.ui.toast(`CHECKPOINT ${E+1}/3 +500`,"good"))})}const I=this.route.getPointAt(Math.min(1,this.carrierS)),g=this.route.getTangentAt(Math.min(1,this.carrierS)).normalize();if(this.carrierPos.set(I.x,0,I.z),this.carrierFwd.copy(g),this.carrierHeading=Math.atan2(-g.x,-g.z),this.carrierBody.setNextKinematicTranslation({x:I.x,y:2.2,z:I.z}),this.carrierBody.setNextKinematicRotation({x:0,y:Math.sin(this.carrierHeading/2),z:0,w:Math.cos(this.carrierHeading/2)}),this.syncCarrierMesh(A),this.integrity<60&&Math.random()<A*6&&this.particles.smoke(I.x,5,I.z,2),this.onFoot)this.updateOnFoot(A),this.audio.engine(0,0,!0,A);else{const C=this.vehicles[this.activeVehicle];if(C.drive(this.input.throttle,this.input.steer,this.input.handbrake,A),this.input.resetPressed&&(C.reset(this.world),this.ui.toast("RIG RESET","")),C.dustTimer-=A,Math.abs(C.speed)>5&&C.dustTimer<=0){C.dustTimer=.08;const E=C.pos;this.particles.dust(E.x-Math.sin(C.heading)*-2,.4,E.z-Math.cos(C.heading)*-2,2)}this.input.handbrake&&Math.abs(C.speed)>10&&Math.random()<A*8&&this.audio.skid();const Q=C.actualSpeed;this.prevSpeed-Q>9&&this.crashCooldown<=0&&(this.crashCooldown=.4,this.audio.crash((this.prevSpeed-Q)/20),this.shake=Math.min(1,this.shake+.35)),this.prevSpeed=Q,this.audio.engine(Math.min(1,Math.abs(C.speed)/C.spec.topSpeed),lN[C.spec.kind],!1,A),this.checkDemolition(C)}for(this.vehicles.forEach((C,Q)=>{(Q!==this.activeVehicle||this.onFoot)&&C.idle(A)}),this.acc=Math.min(this.acc+A,.12);this.acc>=1/60;)this.world.step(),this.acc-=1/60;for(const C of this.vehicles)C.syncMesh(A,C===this.vehicles[this.activeVehicle]&&!this.onFoot?this.input.steer:0);for(const C of this.obstacles)if(rt(C),!C.cleared){const Q=C.body.translation();Math.hypot(Q.x-C.startX,Q.z-C.startZ)>9&&(C.cleared=!0,this.cleared++,this.score+=C.points,this.cleared%3===0&&this.ui.toast(`ROUTE CLEARING +${C.points}`,""))}for(let C=this.debris.length-1;C>=0;C--){const Q=this.debris[C];if(Q.life-=A,Q.life<=0){try{this.world.removeRigidBody(Q.body)}catch{}this.scene.remove(Q.mesh),Q.mesh.material.dispose(),this.debris.splice(C,1);continue}const E=Q.body.translation(),i=Q.body.rotation();Q.mesh.position.set(E.x,E.y,E.z),Q.mesh.quaternion.set(i.x,i.y,i.z,i.w)}if(this.onFoot&&this.playerBody){const C=this.playerBody.translation();this.playerMesh.position.set(C.x,C.y-.85,C.z),this.playerMesh.rotation.y=this.playerHeading}this.particles.update(A),Math.random()<A*8&&this.particles.coolantSparkle(this.stationPos.x,1,this.stationPos.z),this.updateCamera(A),this.updateHud()}updateBlockState(){const A=this.carrierPos.x,I=this.carrierPos.z,g=this.carrierFwd.x,C=this.carrierFwd.z,Q=(E,i,o)=>{const t=E-A,e=i-I,s=t*g+e*C,a=Math.abs(-t*C+e*g);return s>-3-o&&s<13+o&&a<5.5+o};this.blocked=!1;for(const E of this.buildings)if(E.standing&&Q(E.def.x,E.def.z,E.radius*.55)){this.blocked=!0;return}for(const E of this.obstacles){const i=E.body.translation();if(!(i.y>4)&&Q(i.x,i.z,E.radius*.4)){this.blocked=!0;return}}}checkDemolition(A){const I=Math.abs(A.speed);if(I<2.5)return;const g=A.pos;for(const C of this.buildings){if(!C.standing)continue;const Q=Math.hypot(g.x-C.def.x,g.z-C.def.z),E=C.radius*.72+Math.max(A.spec.size.x,A.spec.size.z)*.55;if(Q<E){const i=this.requiredSpeed(C.def.toughness,A.spec.power);I>=i?(this.demolish(C,"ram"),A.speed*=C.def.explosive?.75:.55):this.crashCooldown<=0&&I>6&&(this.crashCooldown=.5,this.audio.crash(I/25),this.shake=Math.min(1,this.shake+.3),this.ui.toast("TOO SLOW — BACK UP & RAM IT!","bad"),A.speed*=-.25)}}}updateOnFoot(A){if(!this.playerBody)return;const I=new Y;this.camera.getWorldDirection(I),I.y=0,I.normalize();const g=new Y(-I.z,0,I.x),C=this.input.sprint?10.5:7,Q=I.x*this.input.throttle+g.x*this.input.steer,E=I.z*this.input.throttle+g.z*this.input.steer,i=Math.hypot(Q,E),o=this.playerBody.linvel();if(i>.05){const t=Q/Math.max(1,i)*C,e=E/Math.max(1,i)*C;this.playerBody.setLinvel({x:t,y:o.y,z:e},!0),this.playerHeading=Math.atan2(t,e),this.playerMesh.position.y+=Math.abs(Math.sin(performance.now()*.012))*.06}else this.playerBody.setLinvel({x:0,y:o.y,z:0},!0);this.input.resetPressed&&this.playerBody.setTranslation({x:this.carrierPos.x+10,y:2,z:this.carrierPos.z},!0)}syncCarrierMesh(A){this.carrierMesh.position.set(this.carrierPos.x,0,this.carrierPos.z),this.carrierMesh.rotation.y=this.carrierHeading,this.animateCarrierIdle(A)}animateCarrierIdle(A){this.beaconTimer+=A;const I=Math.sin(this.beaconTimer*9)>0;for(const C of this.carrierBeacons)C.material.emissiveIntensity=I?2.5:.2;const g=1-this.integrity/100;this.carrierCore.emissive.setHSL(.42-g*.42,1,.5),this.carrierCore.emissiveIntensity=1.8+Math.sin(this.beaconTimer*6)*.5+g*1.5}focusPoint(){if(!this.onFoot){const I=this.vehicles[this.activeVehicle];return{pos:I.pos,heading:I.heading,speed:I.speed}}const A=this.playerBody.translation();return{pos:new Y(A.x,A.y,A.z),heading:this.playerHeading+Math.PI,speed:this.footVel.length()}}updateCamera(A){const I=this.focusPoint(),g=this.onFoot?9:12.5+Math.min(6,Math.abs(I.speed)*.18),C=this.onFoot?5.2:6.4+Math.min(2.5,Math.abs(I.speed)*.06),Q=-Math.sin(I.heading),E=-Math.cos(I.heading),i=new Y(I.pos.x-Q*g,I.pos.y+C,I.pos.z-E*g);i.y=Math.max(2.2,i.y),i.x=Math.max(FE+6,Math.min(FC-6,i.x)),i.z=Math.max(FE+6,Math.min(FC-6,i.z));const o=1-Math.exp(-5*A);this.camPos.lerp(i,o);const t=new Y(I.pos.x+Q*6,I.pos.y+2.2,I.pos.z+E*6);this.camLook.lerp(t,1-Math.exp(-7*A)),this.shake=Math.max(0,this.shake-A*2.2);const e=this.shake*this.shake*1.6,s=(Math.random()-.5)*e,a=(Math.random()-.5)*e;this.camera.position.set(this.camPos.x+s,this.camPos.y+a,this.camPos.z),this.camera.lookAt(this.camLook);const h=62+Math.min(14,Math.abs(I.speed)*.35);this.camera.fov+=(h-this.camera.fov)*Math.min(1,4*A),this.camera.updateProjectionMatrix(),this.sun.position.set(I.pos.x+60,110,I.pos.z+40),this.sun.target.position.set(I.pos.x,0,I.pos.z)}updateHud(){if(this.ui.setTime(this.timeLeft),this.ui.setHull(this.integrity),this.ui.setProgress(this.carrierS),this.ui.setScore(this.score),this.ui.setBlocked(this.blocked),this.onFoot){this.ui.setVehicle("ON FOOT",0);const A=this.playerBody.translation();let I=4.5;for(const g of this.vehicles)I=Math.min(I,Math.hypot(g.pos.x-A.x,g.pos.z-A.z));this.ui.setPrompt(I<4.5?"PRESS E TO DRIVE":null)}else{const A=this.vehicles[this.activeVehicle];this.ui.setVehicle(A.spec.name,A.speed*3.6),this.ui.setPrompt(null)}if(this.hintTimer>.5){if(this.hintTimer=0,this.blocked)this.ui.setHint("⚠ <b>EXPRESS BLOCKED</b> — bulldoze the wreckage off the orange corridor!");else if(this.carrierS>.9)this.ui.setHint("Almost there — keep the final stretch clear!");else if(!this.onFoot){const A=this.vehicles[this.activeVehicle];this.ui.setHint(`<b>${A.spec.name}</b> — ram buildings at speed · <b>E</b> hop out & swap rigs · <b>R</b> flip`)}}if(this.mmTimer-=1/60,this.mmTimer<=0){this.mmTimer=.15;const A=this.focusPoint(),I={dozer:"#ffb400",tipper:"#7fd4ff",buggy:"#9dff57"};this.ui.drawMinimap({route:this.routeSamples,carrier:this.carrierPos,carrierS:this.carrierS,player:A.pos,onFoot:this.onFoot,vehicles:this.vehicles.map((g,C)=>({x:g.pos.x,z:g.pos.z,color:I[g.spec.kind],active:C===this.activeVehicle&&!this.onFoot})),buildings:this.buildings.map(g=>({x:g.def.x,z:g.def.z,r:g.radius,standing:g.standing,onRoute:g.def.onRoute})),obstacles:this.obstacles.map(g=>{const C=g.body.translation();return{x:C.x,z:C.z,cleared:g.cleared}}),station:this.stationPos})}this.blocked&&Math.random()<.02&&this.ui.flashDamage()}endGame(A,I){this.state!=="over"&&(this.state="over",this.audio.engine(0,0,!0,0),A?(this.score+=Math.round(this.timeLeft*10+this.integrity*25),this.audio.win(),this.particles.explosion(this.stationPos.x,2,this.stationPos.z)):(this.audio.lose(),this.particles.explosion(this.carrierPos.x,2,this.carrierPos.z),this.shake=1.4),this.ui.setHudVisible(!1),this.ui.showScreen(null),this.ui.showEnd({win:A,reason:I,score:this.score,demolished:this.demolished,cleared:this.cleared,timeLeft:this.timeLeft,integrity:this.integrity,progress:this.carrierS}))}}const PN=document.getElementById("app"),ON=new bN(PN);ON.init().catch(B=>{console.error(B);const A=document.getElementById("load-status");A&&(A.textContent=`FAILED TO START: ${String(B).slice(0,160)}`)});</script>
     <style rel="stylesheet" crossorigin>*{box-sizing:border-box}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#101216;font-family:Arial Narrow,Helvetica Neue,Arial,sans-serif;color:#f2f2ee;-webkit-user-select:none;user-select:none}#app{position:fixed;inset:0}#app canvas.game{display:block;width:100%;height:100%}.hazard-bar{height:10px;background:repeating-linear-gradient(-45deg,#ff5a1f 0 18px,#16181c 18px 36px)}.panel{background:#0e1013eb;border:1px solid #2c3138;border-top:3px solid #ff5a1f;box-shadow:0 12px 40px #0000008c}.screen{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#080a0cb8;padding:20px}.screen.hidden{display:none}.card{width:min(680px,94vw);max-height:92vh;overflow:auto;background:#14171b;border:1px solid #333a42;border-top:4px solid #ff5a1f;padding:0 0 22px}.card .inner{padding:18px 26px 4px}.kicker{display:inline-block;font-size:12px;letter-spacing:2px;font-weight:700;color:#0e0f11;background:#ffb400;padding:3px 10px;margin-bottom:10px}h1.title{margin:0 0 4px;font-size:clamp(38px,6vw,62px);line-height:.95;font-weight:900;letter-spacing:1px;color:#f5f3ec}h1.title span{color:#ff5a1f}.subtitle{margin:0 0 12px;font-size:15px;color:#c8cdd3}.story{font-size:14.5px;line-height:1.55;color:#d7dbe0}.story b{color:#ffb400}.controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin:14px 0 6px;font-size:13.5px;color:#cfd4da}.key{display:inline-block;min-width:30px;text-align:center;background:#22262c;border:1px solid #4a525b;border-bottom-width:3px;border-radius:4px;padding:1px 7px;margin-right:7px;font-weight:700;color:#fff;font-size:12.5px}.btn-row{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}button.btn{cursor:pointer;border:none;font-family:inherit;font-size:17px;font-weight:900;letter-spacing:1px;padding:13px 28px;color:#101216;background:#ff5a1f;border-bottom:4px solid #a32e07}button.btn:hover{background:#ff7040}button.btn:active{transform:translateY(2px);border-bottom-width:2px}button.btn.ghost{background:transparent;color:#e8eaed;border:2px solid #4a525b}button.btn.ghost:hover{border-color:#ff5a1f;color:#ffb400}.vehicle-legend{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}.vchip{flex:1 1 150px;background:#1b1f24;border:1px solid #333a42;padding:8px 10px;font-size:12.5px;line-height:1.4}.vchip b{display:block;font-size:13px}.vchip.dozer b{color:#ffb400}.vchip.tipper b{color:#7fd4ff}.vchip.buggy b{color:#9dff57}#hud{position:absolute;inset:0;z-index:10;pointer-events:none;display:none}#hud.visible{display:block}#hud-top{position:absolute;top:0;left:0;right:0;display:flex;gap:10px;align-items:stretch;padding:10px 12px 0}.hud-box{background:#0c0e11d1;border:1px solid #2e343b;border-top:3px solid #ff5a1f;padding:7px 12px 8px;min-width:130px}.hud-box .label{font-size:10.5px;letter-spacing:1.5px;color:#9aa2ab;font-weight:700}.hud-box .value{font-size:22px;font-weight:900;color:#fff;line-height:1.1;font-variant-numeric:tabular-nums}.hud-box .value small{font-size:12px;color:#9aa2ab;font-weight:700}#integrity-bar{height:8px;background:#262b31;margin-top:5px;width:170px}#integrity-fill{height:100%;width:100%;background:#9dff57}#integrity-fill.warn{background:#ffb400}#integrity-fill.crit{background:#ff3b30}#progress-wrap{flex:1 1 auto;min-width:170px}#progress-track{position:relative;height:14px;background:#22262c;margin-top:6px;border:1px solid #3a4149}#progress-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:#ff5a1f}#progress-truck{position:absolute;top:-7px;width:4px;height:26px;background:#ffb400;box-shadow:0 0 6px #ffb400}#progress-flag{position:absolute;right:2px;top:-4px;font-size:13px}#blocked-banner{position:absolute;top:86px;left:50%;transform:translate(-50%);background:#c81e14;color:#fff;font-weight:900;letter-spacing:2px;padding:8px 22px;font-size:16px;display:none;border:2px solid #ffb400;animation:blink .5s steps(2) infinite}#blocked-banner.visible{display:block}@keyframes blink{50%{background:#7a100a}}#hud-left{position:absolute;left:12px;bottom:12px;display:flex;flex-direction:column;gap:8px}#vehicle-card{min-width:210px}#vehicle-card .value{font-size:19px}#score-box .value{color:#ffb400}#hud-right{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}#minimap{width:208px;height:208px;background:#0a0c0ed9;border:1px solid #3a4149;border-top:3px solid #ff5a1f}#hint-bar{position:absolute;bottom:12px;left:50%;transform:translate(-50%);background:#0c0e11d9;border:1px solid #2e343b;padding:8px 16px;font-size:13.5px;color:#e6e9ec;max-width:min(560px,90vw);text-align:center}#hint-bar b{color:#ffb400}#interact-prompt{position:absolute;bottom:64px;left:50%;transform:translate(-50%);background:#ffb400;color:#141414;font-weight:900;padding:7px 18px;font-size:14px;letter-spacing:1px;display:none}#interact-prompt.visible{display:block}#toast-stack{position:absolute;top:130px;left:50%;transform:translate(-50%);display:flex;flex-direction:column;gap:6px;align-items:center}.toast{background:#0c0e11e6;border-left:4px solid #ffb400;padding:7px 16px;font-size:13.5px;font-weight:700;color:#fff;animation:toastin .25s ease-out}.toast.good{border-left-color:#9dff57}.toast.bad{border-left-color:#ff3b30}@keyframes toastin{0%{opacity:0;transform:translateY(-8px)}}#damage-vignette{position:absolute;inset:0;pointer-events:none;opacity:0;box-shadow:inset 0 0 140px 60px #c81e148c}#loading-veil{position:absolute;inset:0;z-index:40;background:#0c0e11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}#loading-veil.hidden{display:none}.spinner{width:46px;height:46px;border:5px solid #262b31;border-top-color:#ff5a1f;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}#load-status{font-size:14px;color:#9aa2ab;letter-spacing:1px}.stats-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}.stats-table td{padding:6px 4px;border-bottom:1px solid #262b31;color:#cfd4da}.stats-table td:last-child{text-align:right;font-weight:900;color:#fff}#end-title.win{color:#9dff57}#end-title.lose{color:#ff3b30}#end-title{margin:0;font-size:44px;font-weight:900;letter-spacing:1px}#mute-btn,#pause-btn{pointer-events:auto;cursor:pointer;background:#0c0e11d1;border:1px solid #2e343b;color:#cfd4da;font-family:inherit;font-weight:700;font-size:12px;padding:6px 10px}#mute-btn:hover,#pause-btn:hover{border-color:#ff5a1f;color:#ffb400}#sys-btns{position:absolute;top:10px;right:12px;display:flex;gap:6px}#touch-ui{position:absolute;inset:0;z-index:11;pointer-events:none;display:none}body.touch #touch-ui.ingame{display:block}.tbtn{pointer-events:auto;position:absolute;bottom:110px;width:64px;height:64px;border-radius:50%;background:#14171b99;border:2px solid #4a525b;color:#fff;font-size:22px;font-weight:900}#t-left{left:16px}#t-right{left:92px}#t-gas{right:92px}#t-brake{right:16px}#t-act{right:16px;bottom:190px;width:56px;height:56px;font-size:15px;background:#ffb40080}@media (prefers-reduced-motion: reduce){#blocked-banner,.toast{animation:none}.spinner{animation-duration:2s}}@media (max-width: 760px){.controls-grid{grid-template-columns:1fr}#minimap{width:140px;height:140px}.hud-box{min-width:0;padding:5px 8px}.hud-box .value{font-size:16px}#integrity-bar{width:110px}#vehicle-card{min-width:0}}</style>
-  </head>
+  <!--MUSE-BOOT-CSS-BEGIN v1.0.0-->
+<style>
+/* MUSE SPARK BIOS — boot overlay styles. Dependency-free, prefixed `mb-`. */
+.mb {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: #0b0a08;
+  color: #ffb000;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, Menlo, monospace;
+  font-size: clamp(12px, 1.6vw, 15px);
+  line-height: 1.55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.mb[hidden] { display: none; }
+
+.mb-term {
+  width: min(680px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border: 2px solid #ffb000;
+  background: #0b0a08;
+  padding: 18px 20px;
+  box-shadow: 0 0 0 4px #0b0a08, 0 0 0 5px #5c3d00;
+}
+
+.mb-head {
+  color: #ffd97a;
+  font-weight: 700;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+.mb-static { color: #ffb000; white-space: pre-wrap; }
+
+.mb-log { margin: 8px 0; white-space: pre-wrap; word-break: break-word; }
+
+.mb-line-ok { color: #7fc86b; }
+.mb-line-fail { color: #ff5d5d; }
+.mb-line-dim { color: #8a6d2f; }
+.mb-line-info { color: #ffd97a; }
+
+.mb-progress {
+  height: 18px;
+  border: 1px solid #ffb000;
+  margin: 10px 0 4px;
+  padding: 2px;
+}
+
+.mb-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #ffb000;
+}
+
+.mb-failed .mb-bar-fill { background: #ff5d5d; }
+.mb-failed .mb-term { border-color: #ff5d5d; }
+
+.mb-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #ffd97a;
+  margin-bottom: 6px;
+}
+
+.mb-cursor::after {
+  content: "▊";
+  animation: mb-blink 1s steps(1) infinite;
+}
+
+.mb-fail { margin-top: 12px; border-top: 1px dashed #ff5d5d; padding-top: 12px; }
+.mb-fail[hidden] { display: none; }
+
+.mb-fail-title { color: #ff5d5d; font-weight: 700; margin-bottom: 6px; }
+
+.mb-report {
+  background: #160f0a;
+  border: 1px solid #5c3d00;
+  padding: 10px 12px;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ffd97a;
+  font-size: 0.92em;
+  margin: 8px 0;
+}
+
+.mb-btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+
+.mb-btn {
+  cursor: pointer;
+  font: inherit;
+  background: #ffb000;
+  color: #1a0d04;
+  border: none;
+  padding: 8px 16px;
+  font-weight: 700;
+}
+
+.mb-btn-ghost { background: transparent; color: #ffb000; border: 1px solid #ffb000; }
+
+@keyframes mb-blink { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-cursor::after { animation: none; }
+}
+
+</style>
+<!--MUSE-BOOT-CSS-END-->
+</head>
   <body>
+<!--MUSE-BOOT-BODY-BEGIN v1.0.0-->
+<div id="muse-boot" class="mb" data-boot-id="meltdown-express" data-boot-title="Meltdown Express — Harbor Break" data-boot-renderer="webgl2" data-boot-version="1.0.0">
+  <div class="mb-term">
+    <div class="mb-head">MUSE SPARK BIOS v1.0.0</div>
+    <div class="mb-static">BOOTING: Meltdown Express — Harbor Break
+Starting... if this screen never changes, JavaScript failed to run. Screenshot this page and send it to the devs.</div>
+    <div id="mb-log" class="mb-log"></div>
+    <div class="mb-progress"><div id="mb-bar-fill" class="mb-bar-fill"></div></div>
+    <div class="mb-status"><span id="mb-step" class="mb-cursor"></span><span id="mb-pct">0%</span></div>
+    <div id="mb-fail" class="mb-fail" hidden>
+      <div class="mb-fail-title" id="mb-fail-title"></div>
+      <div id="mb-fail-detail"></div>
+      <pre class="mb-report" id="mb-report"></pre>
+      <div class="mb-btn-row"><button class="mb-btn" id="mb-copy" type="button">COPY REPORT</button><button class="mb-btn mb-btn-ghost" id="mb-retry" type="button">RETRY</button></div>
+    </div>
+  </div>
+</div>
+<script>
+/* MUSE SPARK BIOS — standardized game boot loader.
+ *
+ * Runs before any game code: paints a retro boot screen, checks the
+ * environment, probes renderers (2d / webgl / webgl2 / webgpu), shows progress
+ * with step codes, then hands off to the game. On failure it shows a
+ * screenshot-friendly report instead of starting the game.
+ *
+ * Compatibility: plain ES5, no dependencies. Uses only a tiny DOM surface
+ * (getElementById, createElement, appendChild, textContent, addEventListener,
+ * canvas getContext) so it runs even on very old browsers — where it will
+ * typically report exactly WHY the game cannot start.
+ *
+ * Game integration (one line at the top of the game's module script):
+ *   await window.MuseBoot.gameReady();
+ * The promise resolves when boot passes. It stays pending forever when boot
+ * fails, so the game never starts behind the failure screen.
+ */
+(function (global) {
+  'use strict';
+
+  var VERSION = '1.0.0';
+  var BOOT_MIN_MS = 1400;
+  var STEP_DELAY_MS = 170;
+  var CRASH_WATCH_MS = 20000;
+  var WEBGPU_TIMEOUT_MS = 3000;
+
+  /* Minimal Promise polyfill (only installed when missing). */
+  if (typeof global.Promise === 'undefined') {
+    global.Promise = function (executor) {
+      var callbacks = [];
+      var settled = false;
+      var value;
+      function resolve(v) {
+        if (settled) return;
+        settled = true;
+        value = v;
+        var copy = callbacks.slice();
+        callbacks = [];
+        for (var i = 0; i < copy.length; i++) {
+          (function (cb) {
+            global.setTimeout(function () { cb(value); }, 0);
+          })(copy[i]);
+        }
+      }
+      this.then = function (cb) {
+        if (settled) {
+          global.setTimeout(function () { cb(value); }, 0);
+        } else {
+          callbacks.push(cb);
+        }
+        return this;
+      };
+      try {
+        executor(resolve, function () { resolve(undefined); });
+      } catch (e) {
+        resolve(undefined);
+      }
+    };
+  }
+
+  var DOCUMENT = global.document;
+  var NAVIGATOR = global.navigator || {};
+  var LOCATION = global.location || { search: '', protocol: 'unknown:' };
+  var SCREEN = global.screen || {};
+
+  function now() { return new Date().getTime(); }
+
+  function $(id) {
+    try {
+      return DOCUMENT.getElementById(id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function on(target, evt, fn, capture) {
+    if (target && target.addEventListener) {
+      try {
+        target.addEventListener(evt, fn, !!capture);
+      } catch (e) { /* ignore */ }
+    } else if (target && target.attachEvent) {
+      try {
+        target.attachEvent('on' + evt, fn);
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  function logConsole(msg) {
+    try {
+      if (global.console && global.console.log) global.console.log('[muse-boot] ' + msg);
+    } catch (e) { /* ignore */ }
+  }
+
+  function parseQuery(search) {
+    var out = {};
+    var q = String(search || '').replace(/^\?/, '');
+    if (!q) return out;
+    var parts = q.split('&');
+    for (var i = 0; i < parts.length; i++) {
+      var kv = parts[i].split('=');
+      var k = '';
+      try {
+        k = decodeURIComponent(kv[0]);
+      } catch (e) {
+        k = kv[0];
+      }
+      out[k] = kv.length > 1 ? kv[1] : '1';
+    }
+    return out;
+  }
+
+  var FLAVOR = [
+    'Reticulating structural beams...',
+    'Warming up the wrecking ball...',
+    'Bribing the building inspector...',
+    'Polishing the convoy hubcaps...',
+    'Teaching pixels to explode...',
+    'Inflating the airbags...',
+    'Sharpening the bulldozer...',
+    'Convincing gravity to cooperate...'
+  ];
+
+  var state = {
+    status: 'booting',
+    t0: now(),
+    lines: [],
+    steps: [],
+    diag: {},
+    probes: {},
+    warnings: [],
+    fail: null,
+    readyQueue: [],
+    failHooks: [],
+    need: 'webgl2',
+    prefer: null,
+    gameId: 'unknown',
+    gameTitle: 'Muse Spark Game',
+    noboot: false,
+    flavorIdx: 0,
+    dom: null,
+    crashTimer: null,
+    bootedAt: null
+  };
+
+  /* ---------------- DOM ---------------- */
+
+  function ensureDom() {
+    if (state.dom) return state.dom;
+    var root = $('muse-boot');
+    if (!root) return null;
+    state.dom = {
+      root: root,
+      statik: root.getElementsByClassName ? root.getElementsByClassName('mb-static')[0] : null,
+      log: $('mb-log'),
+      fill: $('mb-bar-fill'),
+      pct: $('mb-pct'),
+      step: $('mb-step'),
+      fail: $('mb-fail'),
+      failTitle: $('mb-fail-title'),
+      failDetail: $('mb-fail-detail'),
+      report: $('mb-report'),
+      copy: $('mb-copy'),
+      retry: $('mb-retry')
+    };
+    if (state.dom.copy) {
+      on(state.dom.copy, 'click', function () { copyReport(); });
+    }
+    if (state.dom.retry) {
+      on(state.dom.retry, 'click', function () {
+        try {
+          LOCATION.reload();
+        } catch (e) { /* ignore */ }
+      });
+    }
+    flushLines();
+    return state.dom;
+  }
+
+  function addLine(cls, text) {
+    state.lines.push({ cls: cls, text: text });
+    logConsole(text);
+    var dom = ensureDom();
+    if (!dom || !dom.log) return;
+    if (dom.statik) dom.statik.style.display = 'none';
+    var div = null;
+    try {
+      div = DOCUMENT.createElement('div');
+      div.className = cls;
+      div.textContent = text;
+      dom.log.appendChild(div);
+    } catch (e) { /* ignore */ }
+  }
+
+  function flushLines() {
+    var dom = state.dom;
+    if (!dom || !dom.log) return;
+    if (dom.statik && state.lines.length > 0) dom.statik.style.display = 'none';
+    try {
+      dom.log.innerHTML = '';
+    } catch (e) { /* ignore */ }
+    for (var i = 0; i < state.lines.length; i++) {
+      try {
+        var div = DOCUMENT.createElement('div');
+        div.className = state.lines[i].cls;
+        div.textContent = state.lines[i].text;
+        dom.log.appendChild(div);
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  function setProgress(pct, stepText) {
+    var dom = ensureDom();
+    if (!dom) return;
+    try {
+      if (dom.fill) dom.fill.style.width = String(Math.max(0, Math.min(100, pct))) + '%';
+      if (dom.pct) dom.pct.textContent = String(Math.round(pct)) + '%';
+      if (dom.step) dom.step.textContent = stepText || '';
+    } catch (e) { /* ignore */ }
+  }
+
+  function show() {
+    var dom = ensureDom();
+    if (dom && dom.root) {
+      try {
+        dom.root.hidden = false;
+        dom.root.style.display = '';
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  function hide() {
+    var dom = ensureDom();
+    if (dom && dom.root) {
+      try {
+        dom.root.hidden = true;
+        dom.root.style.display = 'none';
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  /* ---------------- Probes ---------------- */
+
+  function probeContext2d() {
+    try {
+      var c = DOCUMENT.createElement('canvas');
+      return !!(c && c.getContext && c.getContext('2d'));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function probeWebGL(kind) {
+    try {
+      var c = DOCUMENT.createElement('canvas');
+      if (!c || !c.getContext) return { ok: false };
+      var gl = null;
+      if (kind === 'webgl2') {
+        gl = c.getContext('webgl2');
+      } else {
+        gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+      }
+      if (!gl) return { ok: false };
+      var out = { ok: true };
+      try {
+        var ext = gl.getExtension('WEBGL_debug_renderer_info');
+        if (ext) out.renderer = String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
+      } catch (e2) { /* blocked or unavailable */ }
+      try {
+        var lose = gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+      } catch (e3) { /* ignore */ }
+      return out;
+    } catch (e) {
+      return { ok: false };
+    }
+  }
+
+  function probeWebGPU(cb) {
+    var done = false;
+    function fin(res) {
+      if (done) return;
+      done = true;
+      cb(res);
+    }
+    try {
+      var gpu = NAVIGATOR.gpu;
+      if (!gpu || !gpu.requestAdapter) {
+        fin({ ok: false, reason: 'navigator.gpu missing' });
+        return;
+      }
+      global.setTimeout(function () {
+        fin({ ok: false, reason: 'adapter request timed out' });
+      }, WEBGPU_TIMEOUT_MS);
+      gpu.requestAdapter().then(function (adapter) {
+        if (!adapter) {
+          fin({ ok: false, reason: 'no adapter returned' });
+          return;
+        }
+        var label = '';
+        try {
+          if (adapter.info) label = adapter.info.device || adapter.info.description || '';
+          if (!label && adapter.label) label = adapter.label;
+        } catch (e) { /* ignore */ }
+        fin({ ok: true, adapter: label || 'adapter ok' });
+      }, function (err) {
+        var msg = err;
+        try {
+          msg = (err && err.message) || String(err);
+        } catch (e) { /* ignore */ }
+        fin({ ok: false, reason: String(msg) });
+      });
+    } catch (e) {
+      var msg2 = e;
+      try {
+        msg2 = (e && e.message) || String(e);
+      } catch (e2) { /* ignore */ }
+      fin({ ok: false, reason: String(msg2) });
+    }
+  }
+
+  function probeModules() {
+    try {
+      var s = DOCUMENT.createElement('script');
+      return ('noModule' in s);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function probeStorage() {
+    try {
+      var ls = global.localStorage;
+      if (!ls) return false;
+      var key = '__muse_boot_test__';
+      ls.setItem(key, '1');
+      ls.removeItem(key);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function collectEnv() {
+    var d = state.diag;
+    d.bootVersion = VERSION;
+    try {
+      d.ua = String(NAVIGATOR.userAgent || 'n/a');
+    } catch (e) {
+      d.ua = 'n/a';
+    }
+    try {
+      d.platform = String(NAVIGATOR.platform || NAVIGATOR.userAgentData && NAVIGATOR.userAgentData.platform || 'n/a');
+    } catch (e) {
+      d.platform = 'n/a';
+    }
+    try {
+      d.language = String(NAVIGATOR.language || 'n/a');
+    } catch (e) {
+      d.language = 'n/a';
+    }
+    d.cores = NAVIGATOR.hardwareConcurrency || 'n/a';
+    d.memoryGB = NAVIGATOR.deviceMemory || 'n/a';
+    try {
+      d.screen = (SCREEN.width || '?') + 'x' + (SCREEN.height || '?');
+    } catch (e) {
+      d.screen = 'n/a';
+    }
+    d.dpr = global.devicePixelRatio || 'n/a';
+    d.touch = (typeof NAVIGATOR.maxTouchPoints === 'number') ? NAVIGATOR.maxTouchPoints : 'n/a';
+    try {
+      d.protocol = String(LOCATION.protocol || 'n/a');
+    } catch (e) {
+      d.protocol = 'n/a';
+    }
+    d.online = (typeof NAVIGATOR.onLine === 'boolean') ? (NAVIGATOR.onLine ? 'yes' : 'no') : 'n/a';
+    try {
+      d.time = new Date().toISOString();
+    } catch (e) {
+      d.time = String(now());
+    }
+  }
+
+  function collectFeatures() {
+    var d = state.diag;
+    d.modules = probeModules();
+    d.canvas2d = probeContext2d();
+    var gl1 = probeWebGL('webgl');
+    var gl2 = probeWebGL('webgl2');
+    state.probes.canvas2d = d.canvas2d;
+    state.probes.webgl = !!gl1.ok;
+    state.probes.webgl2 = !!gl2.ok;
+    d.webgl = !!gl1.ok;
+    d.webgl2 = !!gl2.ok;
+    d.gpu = gl2.renderer || gl1.renderer || 'n/a';
+    try {
+      d.audio = !!(global.AudioContext || global.webkitAudioContext);
+    } catch (e) {
+      d.audio = false;
+    }
+    d.storage = probeStorage();
+    try {
+      d.workers = (typeof global.Worker !== 'undefined');
+    } catch (e) {
+      d.workers = false;
+    }
+    try {
+      d.wasm = (typeof global.WebAssembly === 'object');
+    } catch (e) {
+      d.wasm = false;
+    }
+    try {
+      var de = DOCUMENT.documentElement;
+      d.fullscreen = !!(de && (de.requestFullscreen || de.webkitRequestFullscreen || de.msRequestFullscreen));
+    } catch (e) {
+      d.fullscreen = false;
+    }
+  }
+
+  /* ---------------- Steps ---------------- */
+
+  function stepLine(code, name, ok, detail) {
+    var dots = ' .............................. ';
+    var label = '[' + code + '] ' + name;
+    var status = ok ? 'OK' : 'FAIL';
+    var line = label + dots.slice(0, Math.max(4, 34 - label.length)) + status;
+    if (detail) line += ' — ' + detail;
+    addLine(ok ? 'mb-line-ok' : 'mb-line-fail', line);
+    state.steps.push({ code: code, name: name, ok: !!ok, detail: detail || '' });
+  }
+
+  function flavorLine() {
+    var q = FLAVOR[state.flavorIdx % FLAVOR.length];
+    state.flavorIdx += 1;
+    addLine('mb-line-dim', '  ' + q);
+  }
+
+  function recordWarning(text) {
+    state.warnings.push(text);
+    addLine('mb-line-dim', '  ! ' + text);
+  }
+
+  var STEP_DEFS = [
+    { code: 'MB-001', name: 'POWER-ON' },
+    { code: 'MB-010', name: 'ENV SCAN' },
+    { code: 'MB-020', name: 'FEATURE SCAN' },
+    { code: 'MB-030', name: 'RENDERER PROBE' },
+    { code: 'MB-040', name: 'GATE CHECK' },
+    { code: 'MB-050', name: 'HANDOFF' }
+  ];
+
+  function runSteps() {
+    var delay = state.noboot ? 0 : STEP_DELAY_MS;
+    var i = 0;
+
+    function header() {
+      addLine('mb-line-info', 'MUSE SPARK BIOS v' + VERSION);
+      addLine('mb-line-info', 'BOOTING: ' + state.gameTitle + ' [' + state.gameId + ']');
+      addLine('mb-line-dim', '----------------------------------------');
+    }
+
+    function next() {
+      if (state.status !== 'booting') return;
+      if (i >= STEP_DEFS.length) {
+        finishSequence();
+        return;
+      }
+      var def = STEP_DEFS[i];
+      i += 1;
+      setProgress(Math.round(((i - 1) / STEP_DEFS.length) * 100), def.code + ' ' + def.name);
+      global.setTimeout(function () {
+        if (state.status !== 'booting') return;
+        runOne(def, function () {
+          flavorLine();
+          next();
+        });
+      }, delay);
+    }
+
+    function runOne(def, done) {
+      switch (def.code) {
+        case 'MB-001':
+          stepLine(def.code, def.name, true, 't+' + (now() - state.t0) + 'ms');
+          done();
+          break;
+        case 'MB-010':
+          collectEnv();
+          stepLine(def.code, def.name, true, String(state.diag.platform) + ' / ' + String(state.diag.screen));
+          if (state.diag.protocol === 'file:') {
+            recordWarning('Page opened via file:// — some browsers block game files here. Prefer http(s).');
+          }
+          if (state.diag.online === 'no') {
+            recordWarning('Browser reports OFFLINE — CDN imports may fail.');
+          }
+          done();
+          break;
+        case 'MB-020':
+          collectFeatures();
+          if (!state.diag.modules) {
+            stepLine(def.code, def.name, false, 'ES modules unsupported');
+            finishFail('MB-E202', 'BROWSER TOO OLD', 'This browser cannot run ES module scripts, which every Muse Spark game needs. Update to a current Chrome, Edge, Firefox, or Safari.');
+            return;
+          }
+          stepLine(def.code, def.name, true, 'mods+canvas+audio+store');
+          if (!state.diag.storage) recordWarning('localStorage unavailable — saves/settings may not persist.');
+          if (!state.diag.audio) recordWarning('Web Audio unavailable — game will be silent.');
+          done();
+          break;
+        case 'MB-030':
+          probeWebGPU(function (res) {
+            if (state.status !== 'booting') return;
+            state.probes.webgpu = !!res.ok;
+            state.diag.webgpu = !!res.ok;
+            state.diag.webgpuAdapter = res.ok ? (res.adapter || 'ok') : ('no (' + (res.reason || 'unknown') + ')');
+            var have = [];
+            if (state.probes.webgl) have.push('GL');
+            if (state.probes.webgl2) have.push('GL2');
+            if (state.probes.webgpu) have.push('GPU');
+            stepLine(def.code, def.name, true, have.length > 0 ? ('have: ' + have.join('+')) : 'none detected');
+            done();
+          });
+          break;
+        case 'MB-040': {
+          var gate = evaluateGate(state.need);
+          if (!gate.ok) {
+            stepLine(def.code, def.name, false, 'need ' + state.need.toUpperCase());
+            finishFail(gate.code, gate.title, gate.detail);
+            return;
+          }
+          var extra = 'need ' + state.need.toUpperCase() + ' present';
+          if (state.prefer && !state.probes[state.prefer]) {
+            recordWarning('Preferred renderer ' + state.prefer.toUpperCase() + ' missing — using fallback.');
+          }
+          stepLine(def.code, def.name, true, extra);
+          done();
+          break;
+        }
+        case 'MB-050':
+          stepLine(def.code, def.name, true, state.readyQueue.length + ' waiter(s)');
+          done();
+          break;
+        default:
+          done();
+          break;
+      }
+    }
+
+    function finishSequence() {
+      if (state.status !== 'booting') return;
+      var wait = state.noboot ? 0 : Math.max(0, BOOT_MIN_MS - (now() - state.t0));
+      global.setTimeout(function () {
+        if (state.status !== 'booting') return;
+        finishOk();
+      }, wait);
+    }
+
+    header();
+    next();
+  }
+
+  function evaluateGate(need) {
+    var p = state.probes;
+    var avail = {
+      '2d': !!p.canvas2d,
+      webgl: !!p.webgl,
+      webgl2: !!p.webgl2,
+      webgpu: !!p.webgpu
+    };
+    if (!avail[need]) {
+      var names = { '2d': 'Canvas 2D', webgl: 'WebGL', webgl2: 'WebGL2', webgpu: 'WebGPU' };
+      return {
+        ok: false,
+        code: 'MB-E201',
+        title: 'RENDERER UNAVAILABLE',
+        detail: 'This game needs ' + (names[need] || need) + ' but this browser/device did not provide it. ' +
+          'Try a current Chrome or Edge with hardware acceleration enabled.'
+      };
+    }
+    return { ok: true };
+  }
+
+  /* ---------------- Finish ---------------- */
+
+  function finishOk() {
+    if (state.status !== 'booting') return;
+    state.status = 'ready';
+    state.bootedAt = now();
+    setProgress(100, 'MB-900 READY');
+    addLine('mb-line-ok', '[MB-900] READY ............ OK');
+    publishReport();
+    var queue = state.readyQueue.slice();
+    state.readyQueue = [];
+    global.setTimeout(function () {
+      hide();
+      startCrashWatch();
+      for (var i = 0; i < queue.length; i++) {
+        try {
+          queue[i](api);
+        } catch (e) { /* ignore waiter errors */ }
+      }
+    }, state.noboot ? 0 : 350);
+  }
+
+  function finishFail(code, title, detail) {
+    if (state.status === 'failed') return;
+    state.status = 'failed';
+    state.fail = { code: code, title: title, detail: detail || '' };
+    state.steps.push({ code: code, name: title, ok: false, detail: detail || '' });
+    setProgress(100, code + ' ' + title);
+    addLine('mb-line-fail', '[' + code + '] ' + title + ' .... FAIL');
+    if (detail) addLine('mb-line-info', '  ' + detail);
+    stopCrashWatch();
+    renderFailBox();
+    publishReport();
+    show();
+    for (var i = 0; i < state.failHooks.length; i++) {
+      try {
+        state.failHooks[i](state.fail);
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  function renderFailBox() {
+    var dom = ensureDom();
+    if (!dom) return;
+    try {
+      if (dom.root && dom.root.className.indexOf('mb-failed') === -1) {
+        dom.root.className += ' mb-failed';
+      }
+      if (dom.failTitle) dom.failTitle.textContent = 'BOOT FAILED — ' + state.fail.code + ' ' + state.fail.title;
+      if (dom.failDetail) dom.failDetail.textContent = state.fail.detail;
+      if (dom.report) dom.report.textContent = buildReport();
+      if (dom.fail) {
+        dom.fail.hidden = false;
+        dom.fail.style.display = '';
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  /* ---------------- Report ---------------- */
+
+  function yn(v) {
+    if (v === true) return 'yes';
+    if (v === false) return 'no';
+    return String(v);
+  }
+
+  function buildReport() {
+    var d = state.diag;
+    var out = [];
+    out.push('MUSE SPARK BIOS BOOT REPORT v' + VERSION);
+    out.push('game: ' + state.gameTitle + ' [' + state.gameId + ']');
+    out.push('time: ' + (d.time || 'n/a') + '  status: ' + state.status.toUpperCase());
+    if (state.fail) {
+      out.push('fail: ' + state.fail.code + ' ' + state.fail.title);
+      out.push('  ' + state.fail.detail);
+    }
+    out.push('steps:');
+    for (var i = 0; i < state.steps.length; i++) {
+      var s = state.steps[i];
+      out.push('  [' + s.code + '] ' + s.name + ' ' + (s.ok ? 'OK' : 'FAIL') + (s.detail ? ' — ' + s.detail : ''));
+    }
+    out.push('diagnostics:');
+    out.push('  ua: ' + (d.ua || 'n/a'));
+    out.push('  platform: ' + (d.platform || 'n/a') + '  lang: ' + (d.language || 'n/a'));
+    out.push('  cores: ' + yn(d.cores) + '  memGB: ' + yn(d.memoryGB) + '  screen: ' + (d.screen || 'n/a') +
+      '  dpr: ' + yn(d.dpr) + '  touch: ' + yn(d.touch));
+    out.push('  protocol: ' + (d.protocol || 'n/a') + '  online: ' + yn(d.online));
+    out.push('  modules: ' + yn(d.modules) + '  canvas2d: ' + yn(d.canvas2d) +
+      '  webgl: ' + yn(d.webgl) + '  webgl2: ' + yn(d.webgl2) + '  webgpu: ' + yn(d.webgpu));
+    out.push('  gpu: ' + (d.gpu || 'n/a'));
+    out.push('  webgpuAdapter: ' + (d.webgpuAdapter || 'n/a'));
+    out.push('  audio: ' + yn(d.audio) + '  storage: ' + yn(d.storage) +
+      '  workers: ' + yn(d.workers) + '  wasm: ' + yn(d.wasm) + '  fullscreen: ' + yn(d.fullscreen));
+    if (state.warnings.length > 0) {
+      out.push('warnings:');
+      for (var w = 0; w < state.warnings.length; w++) out.push('  ! ' + state.warnings[w]);
+    }
+    out.push('need: ' + state.need + (state.prefer ? ' (prefer ' + state.prefer + ')' : ''));
+    return out.join('\n');
+  }
+
+  function publishReport() {
+    try {
+      global.__MUSE_BOOT_REPORT__ = buildReport();
+    } catch (e) { /* ignore */ }
+  }
+
+  function copyReport() {
+    var text = buildReport();
+    function done(btnText) {
+      var dom = state.dom;
+      if (dom && dom.copy) {
+        try {
+          dom.copy.textContent = btnText;
+        } catch (e) { /* ignore */ }
+      }
+    }
+    try {
+      if (NAVIGATOR.clipboard && NAVIGATOR.clipboard.writeText) {
+        NAVIGATOR.clipboard.writeText(text).then(function () {
+          done('COPIED!');
+        }, function () {
+          fallbackCopy(text, done);
+        });
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    fallbackCopy(text, done);
+  }
+
+  function fallbackCopy(text, done) {
+    try {
+      var ta = DOCUMENT.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      DOCUMENT.body.appendChild(ta);
+      ta.select();
+      DOCUMENT.execCommand('copy');
+      DOCUMENT.body.removeChild(ta);
+      done('COPIED!');
+    } catch (e) {
+      done('COPY FAILED — SCREENSHOT INSTEAD');
+    }
+  }
+
+  /* ---------------- Crash watch ---------------- */
+
+  function startCrashWatch() {
+    stopCrashWatch();
+    try {
+      state.crashTimer = global.setTimeout(function () {
+        state.crashTimer = null;
+      }, CRASH_WATCH_MS);
+    } catch (e) { /* ignore */ }
+  }
+
+  function stopCrashWatch() {
+    if (state.crashTimer) {
+      try {
+        global.clearTimeout(state.crashTimer);
+      } catch (e) { /* ignore */ }
+      state.crashTimer = null;
+    }
+  }
+
+  function describeError(evt) {
+    var msg = '';
+    try {
+      msg = (evt && evt.message) || 'unknown error';
+    } catch (e) {
+      msg = 'unknown error';
+    }
+    var where = '';
+    try {
+      if (evt && evt.filename) where = ' @ ' + evt.filename + ':' + (evt.lineno || '?');
+    } catch (e) { /* ignore */ }
+    return String(msg) + where;
+  }
+
+  function hookErrors() {
+    /* Runtime errors (bubble phase). */
+    on(global, 'error', function (evt) {
+      try {
+        if (evt && evt.target && (evt.target.src || evt.target.href)) return; /* resource: handled below */
+      } catch (e) { /* ignore */ }
+      var desc = describeError(evt);
+      if (state.status === 'booting') {
+        recordWarning('Script error during boot: ' + desc);
+      } else if (state.status === 'ready' && state.crashTimer) {
+        show();
+        finishFail('MB-E501', 'GAME CRASHED DURING STARTUP', desc);
+      }
+    }, false);
+
+    /* Resource load errors (capture phase): failed CDN/module scripts. */
+    on(global, 'error', function (evt) {
+      var t = null;
+      try {
+        t = evt && evt.target;
+      } catch (e) { /* ignore */ }
+      if (!t || !(t.src || t.href)) return;
+      var url = '';
+      try {
+        url = t.src || t.href || String(t.tagName);
+      } catch (e) {
+        url = 'resource';
+      }
+      if (state.status === 'booting') {
+        finishFail('MB-E302', 'GAME FILE FAILED TO LOAD', 'A script or import failed to load: ' + url +
+          '. Check your connection (CDN imports need the network).');
+      } else if (state.status === 'ready' && state.crashTimer) {
+        recordWarning('Resource failed after boot: ' + url);
+      }
+    }, true);
+
+    on(global, 'unhandledrejection', function (evt) {
+      var desc = 'unhandled rejection';
+      try {
+        var r = evt && evt.reason;
+        desc = (r && (r.stack || r.message)) || String(r);
+      } catch (e) { /* ignore */ }
+      if (state.status === 'booting') {
+        recordWarning('Async error during boot: ' + String(desc).slice(0, 200));
+      } else if (state.status === 'ready' && state.crashTimer) {
+        show();
+        finishFail('MB-E501', 'GAME CRASHED DURING STARTUP', String(desc).slice(0, 300));
+      }
+    }, false);
+  }
+
+  /* ---------------- Public API ---------------- */
+
+  function gameReady(cfg) {
+    return new global.Promise(function (resolve) {
+      if (cfg && typeof cfg === 'object') {
+        if (typeof cfg.renderer === 'string') state.need = cfg.renderer;
+        if (typeof cfg.prefer === 'string') state.prefer = cfg.prefer;
+      }
+      if (state.status === 'ready') {
+        var gate = evaluateGate(state.need);
+        if (!gate.ok && state.status === 'ready') {
+          /* Late override demanding more than we probed: fail now. */
+          show();
+          state.status = 'booting';
+          finishFail(gate.code, gate.title, gate.detail);
+          return;
+        }
+        resolve(api);
+        return;
+      }
+      if (state.status === 'failed') {
+        /* Stay pending forever: the game must not start behind a fail screen. */
+        return;
+      }
+      state.readyQueue.push(resolve);
+    });
+  }
+
+  function gameStarted() {
+    stopCrashWatch();
+    hide();
+  }
+
+  var api = {
+    version: VERSION,
+    gameReady: gameReady,
+    gameStarted: gameStarted,
+    show: show,
+    hide: hide,
+    report: buildReport,
+    copyReport: copyReport,
+    onFail: function (fn) {
+      if (typeof fn === 'function') {
+        if (state.status === 'failed') {
+          try {
+            fn(state.fail);
+          } catch (e) { /* ignore */ }
+        } else {
+          state.failHooks.push(fn);
+        }
+      }
+    },
+    status: function () { return state.status; },
+    steps: function () { return state.steps.slice(); },
+    diag: function () {
+      var copy = {};
+      for (var k in state.diag) {
+        if (Object.prototype.hasOwnProperty.call(state.diag, k)) copy[k] = state.diag[k];
+      }
+      return copy;
+    }
+  };
+
+  /* ---------------- Auto-run ---------------- */
+
+  function readConfig() {
+    try {
+      var root = $('muse-boot');
+      if (root && root.getAttribute) {
+        var id = root.getAttribute('data-boot-id');
+        var title = root.getAttribute('data-boot-title');
+        var need = root.getAttribute('data-boot-renderer');
+        var prefer = root.getAttribute('data-boot-prefer');
+        if (id) state.gameId = id;
+        if (title) state.gameTitle = title;
+        if (need) state.need = need;
+        if (prefer) state.prefer = prefer;
+      }
+    } catch (e) { /* ignore */ }
+    try {
+      var q = parseQuery(LOCATION.search);
+      if (q.noboot === '1') state.noboot = true;
+    } catch (e) { /* ignore */ }
+  }
+
+  readConfig();
+  hookErrors();
+  ensureDom();
+  publishReport();
+  runSteps();
+
+  global.MuseBoot = api;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+<!--MUSE-BOOT-BODY-END-->
     <div id="app"><div id="boot">LOADING MELTDOWN EXPRESS…</div></div>
   </body>
 </html>
