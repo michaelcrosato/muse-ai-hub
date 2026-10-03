@@ -198,6 +198,51 @@ describe("muse-boot happy path", () => {
   });
 });
 
+describe("per-game injected boot (up to the game handoff)", () => {
+  const BOOT_CSS = readFileSync(join(ROOT, "boot", "muse-boot.css"), "utf8");
+  const manifest = JSON.parse(readFileSync(join(ROOT, "games", "games.json"), "utf8"));
+
+  for (const game of manifest.games) {
+    it(`${game.id}: blocks match manifest + source of truth`, () => {
+      const html = readFileSync(join(ROOT, "games", game.file), "utf8");
+      const body = /<!--MUSE-BOOT-BODY-BEGIN v([^-]*)-->([\s\S]*?)<!--MUSE-BOOT-BODY-END-->/.exec(html);
+      assert.ok(body, "body block present");
+      const attrs = body[2];
+      assert.ok(attrs.includes(`data-boot-id="${game.id}"`), "id matches manifest");
+      assert.ok(attrs.includes(`data-boot-renderer="${game.boot.renderer}"`), "renderer matches manifest");
+      for (const id of ["muse-boot", "mb-log", "mb-bar-fill", "mb-pct", "mb-step", "mb-fail", "mb-report", "mb-copy", "mb-retry"]) {
+        assert.ok(attrs.includes(`id="${id}"`), `overlay has #${id}`);
+      }
+      const js = /<script>\n([\s\S]*?)\n<\/script>/.exec(body[2]);
+      assert.ok(js, "boot script present");
+      assert.equal(js[1].trim(), BOOT_SRC.trim(), "injected JS is byte-identical to boot source");
+      const css = /<!--MUSE-BOOT-CSS-BEGIN v[^-]*-->\n<style>\n([\s\S]*?)\n<\/style>\n<!--MUSE-BOOT-CSS-END-->/.exec(html);
+      assert.ok(css, "css block present");
+      assert.equal(css[1].trim(), BOOT_CSS.trim(), "injected CSS is byte-identical to boot source");
+      const mod = /<script\s+type="module"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
+      assert.ok(mod, "module script present");
+      assert.ok(mod[1].trimStart().startsWith("/*MUSE-BOOT-GATE"), "gate is the first module statement");
+    });
+
+    it(`${game.id}: reaches READY with required renderer, MB-E201 without`, async () => {
+      const need = game.boot.renderer;
+      const has = { webgl: true, webgl2: true, webgpu: true };
+      const sbOk = makeSandbox({ need, search: "?noboot=1", ...has });
+      await withTimeout(sbOk.MuseBoot.gameReady(), 5000, `${game.id} ready`);
+      assert.equal(sbOk.MuseBoot.status(), "ready");
+      const codes = sbOk.MuseBoot.steps().map((s) => s.code);
+      assert.ok(codes.includes("MB-030") && codes.includes("MB-040"), "renderer probe + gate ran");
+
+      const sbFail = makeSandbox({ need, search: "?noboot=1", webgl: false, webgl2: false, webgpu: false, canvas2d: need !== "2d" });
+      const failPromise = new Promise((resolve) => sbFail.MuseBoot.onFail(resolve));
+      sbFail.MuseBoot.gameReady().then(() => {}, () => {});
+      const fail = await withTimeout(failPromise, 5000, `${game.id} fail`);
+      assert.equal(fail.code, "MB-E201");
+      assert.equal(sbFail.MuseBoot.status(), "failed");
+    });
+  }
+});
+
 describe("muse-boot failure paths", () => {
   it("fails MB-E201 when the required renderer is missing", async () => {
     const sb = makeSandbox({ webgl2: false, webgl: false, webgpu: false, need: "webgl2" });
