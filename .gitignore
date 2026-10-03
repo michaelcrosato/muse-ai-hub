@@ -8,3 +8,4 @@ Thumbs.db
 # Deps / tooling
 node_modules/
 .vercel/
+.vercel
