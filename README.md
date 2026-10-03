@@ -4,7 +4,7 @@ A dashboard and development zone for browser games built with **Muse Spark**.
 Browse the collection, search and filter, and play any game instantly — every
 game is a single self-contained HTML file.
 
-Live site: deployed on Vercel from this repo.
+Live site: <https://muse-ai-hub-chi.vercel.app> (deployed on Vercel from this repo).
 Repo: `github.com/michaelcrosato/muse-ai-hub` (public).
 
 ## How it works
