@@ -22,6 +22,7 @@ if (args.includes("--help") || args.includes("-h") || args.length === 0) {
 Options for --add:
   --id <slug>            defaults to filename slug
   --renderer <name>      2d, webgl, webgl2 (default), or webgpu
+  --boot-assets <mode>   inline (default) or shared hub files
   --title <title>        required
   --description <text>   card blurb
   --tags <a,b,c>         comma-separated lowercase tags
@@ -86,6 +87,9 @@ function validate(manifest) {
     if (g.boot && g.boot.prefer !== undefined && !["2d", "webgl", "webgl2", "webgpu"].includes(g.boot.prefer)) {
       errors.push(`"${g.id}": boot.prefer must be one of 2d, webgl, webgl2, webgpu`);
     }
+    if (g.boot && g.boot.assets !== undefined && !["inline", "shared"].includes(g.boot.assets)) {
+      errors.push(`"${g.id}": boot.assets must be inline or shared`);
+    }
   }
   return errors;
 }
@@ -138,11 +142,16 @@ function addGame(flags) {
     console.error(`Error: bad --prefer "${prefer}" (2d, webgl, webgl2, webgpu).`);
     process.exit(1);
   }
+  const assets = flags["boot-assets"] ?? "inline";
+  if (!["inline", "shared"].includes(assets)) {
+    console.error("Error: --boot-assets must be inline or shared.");
+    process.exit(1);
+  }
   manifest.games.push({
     id,
     title: flags.title.trim(),
     file: name,
-    boot: prefer ? { renderer, prefer } : { renderer },
+    boot: { renderer, ...(prefer ? { prefer } : {}), ...(assets === "shared" ? { assets } : {}) },
     description: typeof flags.description === "string" ? flags.description : "",
     tags: typeof flags.tags === "string"
       ? flags.tags.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)

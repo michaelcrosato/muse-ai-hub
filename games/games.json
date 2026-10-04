@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-03",
+  "updated": "2026-10-04",
   "games": [
     {
       "id": "corehaul",
@@ -20,7 +20,7 @@
     },
     {
       "id": "dead-mans-haul",
-      "title": "Fallout Crew: Dead Man's Haul \u2014 Easy Street",
+      "title": "Fallout Crew: Dead Man's Haul — Easy Street",
       "file": "blastcorps-dead-mans-haul-20261001-muse-spark.html",
       "description": "A full-crew demolition run down Easy Street. Smash, clear, and escort the haul through hostile blocks.",
       "tags": [
@@ -53,7 +53,7 @@
     },
     {
       "id": "meltdown-express",
-      "title": "Meltdown Express \u2014 Harbor Break",
+      "title": "Meltdown Express — Harbor Break",
       "file": "blastcorps-meltdownexpress-20261001-musespark.html",
       "description": "The Express is coming through the harbor whether the harbor likes it or not. Break the line open.",
       "tags": [
@@ -114,6 +114,42 @@
       "boot": {
         "renderer": "webgpu"
       }
+    },
+    {
+      "id": "cinderline",
+      "title": "Cinderline: Ember Gap",
+      "file": "cinderline-ember-gap-20261004-musespark.html",
+      "boot": {
+        "renderer": "webgl2",
+        "prefer": "webgpu"
+      },
+      "description": "The rig can't stop - you clear the way. Race the Ramdozer ahead of Mama Kiln and smash a corridor through Ember Gap before the siphon ruptures.",
+      "tags": [
+        "clearance-racer",
+        "demolition",
+        "driving"
+      ],
+      "added": "2026-10-04",
+      "controls": "WASD drive / Space handbrake / E horn / R unstick",
+      "engine": "Muse Spark"
+    },
+    {
+      "id": "cinderwire",
+      "title": "Cinderwire",
+      "file": "cinderwire-20261004-musespark.html",
+      "boot": {
+        "renderer": "webgpu",
+        "assets": "shared"
+      },
+      "description": "Two cyberpunk-noir runs inspired by SNES Shadowrun: infiltrate Helix Dynamics for the Ledger, then survive the Ash Exchange. Sneak, shoot, hack the Veil, and hire your crew.",
+      "tags": [
+        "action",
+        "stealth",
+        "cyberpunk"
+      ],
+      "added": "2026-10-04",
+      "controls": "WASD move / Mouse aim / Click or F fire / C crouch / Esc pause",
+      "engine": "Muse Spark / Pavilion"
     }
   ]
 }
