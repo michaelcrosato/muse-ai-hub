@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cinderwire — The Helix Ledger / The Ash Exchange</title>
+  <meta name="description" content="A cyberpunk-noir infiltration game inspired by SNES Shadowrun. Two complete missions with stealth, gunplay, hacking and crew loadouts.">
+  <meta name="cinderwire-wasm-sha256" content="__CINDERWIRE_SHA256__">
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #141020; color: #f2eaff; }
+    canvas { display: block; width: 100vw !important; height: 100vh !important; outline: none; }
+    #launch, #msg { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; box-sizing: border-box; font-family: system-ui, sans-serif; }
+    #launch { background: radial-gradient(ellipse at top, #29213e, #141020 70%); }
+    #launch[hidden], #msg[hidden] { display: none; }
+    .briefing { width: min(600px, 100%); }
+    .kicker { color: #7df9ff; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { font-size: clamp(40px, 8vw, 70px); letter-spacing: .03em; margin: 12px 0; }
+    .intro { line-height: 1.6; color: #c8b8d9; }
+    label { display: block; margin: 28px 0 8px; color: #7df9ff; }
+    select, button { padding: 12px 16px; border: 1px solid #796196; border-radius: 6px; font: inherit; }
+    select { width: 100%; background: #211a30; color: #f2eaff; }
+    button { margin-top: 22px; background: #7df9ff; color: #141020; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: wait; }
+    :focus-visible { outline: 3px solid #f6c453; outline-offset: 4px; }
+    .controls { margin-top: 24px; line-height: 1.7; font-size: 14px; color: #c8b8d9; }
+    #msg { background: #141020; text-align: center; font-size: 18px; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <main id="launch">
+    <div class="briefing">
+      <p class="kicker">A cyberpunk-noir infiltration game</p>
+      <h1>CINDERWIRE</h1>
+      <p class="intro">The corps own the streets. The Veil owns the truth. You run the gap between them.</p>
+      <label for="mission">Choose your run</label>
+      <select id="mission">
+        <option value="cinderwire">1 · The Helix Ledger</option>
+        <option value="ash_exchange">2 · The Ash Exchange</option>
+      </select>
+      <p class="intro" id="mission-story">Take the Helix Ledger from the corporation's vault. Hire your crew, sneak past patrols, jack into the Veil, and uncover who your fixer really works for.</p>
+      <button id="start" type="button" disabled>Start run</button>
+      <p class="controls">WASD move · Mouse aim · Left click / F / Space fire<br>C / Ctrl crouch · Esc pause · F5 restart · F2 switch rooms<br>Right drag rotates the camera · Mouse wheel zooms</p>
+    </div>
+  </main>
+  <div id="msg" role="status" aria-live="polite" hidden>Loading Cinderwire…</div>
+  <!-- Compiled game and wasm-bindgen glue; hub boot assets are shared externally. -->
+  <script id="cinderwire-module" type="application/octet-stream">__CINDERWIRE_MODULE__</script>
+  <script id="cinderwire-wasm" type="application/octet-stream">__CINDERWIRE_WASM__</script>
+  <script type="module">
+    const launch = document.getElementById("launch");
+    const msg = document.getElementById("msg");
+    const start = document.getElementById("start");
+    const mission = document.getElementById("mission");
+    const story = document.getElementById("mission-story");
+    const missions = {
+      cinderwire: { title: "The Helix Ledger", story: "Take the Helix Ledger from the corporation's vault. Hire your crew, sneak past patrols, jack into the Veil, and uncover who your fixer really works for." },
+      ash_exchange: { title: "The Ash Exchange", story: "Sell a copy of the Ledger, survive the double-cross, and walk Pale out. Choose the quiet high road or the loud Pit, then race to the getaway." },
+    };
+    const query = new URLSearchParams(location.search);
+    const requested = query.get("mission") || query.get("room") || query.get("scene");
+    if (Object.hasOwn(missions, requested)) mission.value = requested;
+    function describeMission() { story.textContent = missions[mission.value].story; }
+    mission.addEventListener("change", describeMission);
+    describeMission();
+    start.disabled = false;
+
+    start.addEventListener("click", async () => {
+      start.disabled = true;
+      launch.hidden = true;
+      msg.hidden = false;
+      const selected = mission.value;
+      const url = new URL(location.href);
+      url.searchParams.set("scene", selected);
+      url.searchParams.set("mission", selected);
+      url.searchParams.delete("room");
+      history.replaceState(null, "", url);
+      document.title = `Cinderwire: ${missions[selected].title}`;
+      document.body.dataset.mission = selected;
+      try {
+        const encoded = document.getElementById("cinderwire-wasm").textContent.trim();
+        const bytes = Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0));
+        const game = await import(document.getElementById("cinderwire-module").textContent.trim());
+        const observe = new MutationObserver(() => {
+          const canvas = document.querySelector("canvas");
+          if (canvas) {
+            canvas.setAttribute("aria-label", `Cinderwire: ${missions[selected].title}`);
+            canvas.focus();
+            msg.hidden = true;
+            window.MuseBoot.gameStarted();
+            observe.disconnect();
+          }
+        });
+        observe.observe(document.body, { childList: true });
+        await game.default({ module_or_path: bytes });
+      } catch (error) {
+        console.error("Cinderwire failed to start:", error);
+        msg.textContent = `Cinderwire could not start: ${error.message}. Reload to retry.`;
+        msg.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>

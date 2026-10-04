@@ -49,7 +49,7 @@ there are 7 games or 700.
    probe, progress with step codes, screenshot-friendly failure report):
 
    ```bash
-   node scripts/inject-boot.mjs --game <id>
+   node scripts/inject-boot.mjs --inject --game <id>
    ```
 
    Set `boot.renderer` in `games.json` to the minimum your game needs
@@ -57,6 +57,12 @@ there are 7 games or 700.
    preferred-with-fallback renderer). Start from `boot/template.html` for new
    games — it shows the one-line gate your module script needs:
    `await window.MuseBoot.gameReady();`
+
+   To keep hub dependencies out of the game HTML, register with
+   `--boot-assets shared` (or set `boot.assets` to `"shared"`). The injector then
+   references `../boot/muse-boot.css` and `../boot/muse-boot.js`. Serve the file
+   within the hub so those shared assets remain available. The default `"inline"`
+   mode embeds the boot loader for fully standalone game files.
 
 4. **Validate**
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* Inject (or verify) the MUSE SPARK BIOS boot loader in game files.
  *
- * Games stay single-file: this inlines boot/muse-boot.css + boot/muse-boot.js
- * plus a one-line gate in each module script. Re-runnable and versioned.
+ * Inlines boot assets by default; boot.assets="shared" references the hub's
+ * boot files instead. Adds a module gate. Re-runnable and versioned.
  *
  *   node scripts/inject-boot.mjs --inject [--game <id>]
  *   node scripts/inject-boot.mjs --check  [--game <id>]
@@ -92,10 +92,12 @@ function bootRenderer(game) {
   return RENDERERS.includes(r) ? r : null;
 }
 
-function cssBlock() {
+function cssBlock(game) {
   return (
     `<!--MUSE-BOOT-CSS-BEGIN v${VERSION}-->\n` +
-    `<style>\n${BOOT_CSS}\n</style>\n` +
+    (game.boot.assets === "shared"
+      ? `<link rel="stylesheet" href="../boot/muse-boot.css">\n`
+      : `<style>\n${BOOT_CSS}\n</style>\n`) +
     `<!--MUSE-BOOT-CSS-END-->`
   );
 }
@@ -123,7 +125,9 @@ function bodyBlock(game) {
     `    </div>\n` +
     `  </div>\n` +
     `</div>\n` +
-    `<script>\n${BOOT_JS}\n</script>\n` +
+    (game.boot.assets === "shared"
+      ? `<script src="../boot/muse-boot.js"></script>\n`
+      : `<script>\n${BOOT_JS}\n</script>\n`) +
     `<!--MUSE-BOOT-BODY-END-->`
   );
 }
@@ -142,8 +146,8 @@ function injectGame(game) {
   let html = readFileSync(path, "utf8");
   const origLen = html.length;
 
-  if (RE_CSS.test(html)) html = html.replace(RE_CSS, cssBlock());
-  else if (RE_HEAD_CLOSE.test(html)) html = html.replace(RE_HEAD_CLOSE, cssBlock() + "\n</head>");
+  if (RE_CSS.test(html)) html = html.replace(RE_CSS, () => cssBlock(game));
+  else if (RE_HEAD_CLOSE.test(html)) html = html.replace(RE_HEAD_CLOSE, () => cssBlock(game) + "\n</head>");
   else fail(game, "no </head> found");
 
   if (RE_BODY.test(html)) html = html.replace(RE_BODY, () => bodyBlock(game));
@@ -181,6 +185,14 @@ function checkGame(game) {
   }
   if (!has(/\/\*MUSE-BOOT-GATE v[^*]*\*\//)) {
     errors.push(`"${game.id}": module gate line missing or stale (want ${want})`);
+  }
+  if (game.boot?.assets === "shared") {
+    if (!RE_CSS.exec(html)?.[0].includes('<link rel="stylesheet" href="../boot/muse-boot.css">')) {
+      errors.push(`"${game.id}": shared boot CSS reference missing`);
+    }
+    if (!RE_BODY.exec(html)?.[0].includes('<script src="../boot/muse-boot.js"></script>')) {
+      errors.push(`"${game.id}": shared boot JS reference missing`);
+    }
   }
   return errors;
 }

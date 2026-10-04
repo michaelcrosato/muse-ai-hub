@@ -36,8 +36,29 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Short version:
 
 1. Copy your game file into `games/` (or start from `boot/template.html`).
 2. Register it: `node scripts/add-game.mjs --add games/your-game.html --title "Your Title" --tags arcade,driving --renderer webgl2`
-3. Wire the boot screen: `node scripts/inject-boot.mjs --game <id>`
+3. Wire the boot screen: `node scripts/inject-boot.mjs --inject --game <id>`
 4. Check it: `node scripts/add-game.mjs --check && node scripts/inject-boot.mjs --check && node --test tests/boot.test.mjs`, then playtest via `play.html?id=<id>`.
+
+Use `--boot-assets shared` when registering a game to reference the hub's boot
+CSS/JS instead of embedding them. Game code and assets still live in one HTML file.
+
+### Cinderwire import
+
+The Shadowrun-inspired Cinderwire import contains both **The Helix Ledger** and
+**The Ash Exchange**, built from the Rust Pavilion engine. It requires WebGPU.
+Its WebAssembly and generated JavaScript are embedded; shared boot CSS/JS remain
+under `boot/`. Rust libraries are linked into the game binary and cannot use the
+JavaScript Three.js/Rapier CDN imports used by other games.
+
+To rebuild from the source project:
+
+```bash
+cd /home/micha/dev/muse-3-shadow-run-snes
+scripts/build-web.sh
+cd /home/micha/dev/muse-ai-hub
+node scripts/import-cinderwire.mjs /home/micha/dev/muse-3-shadow-run-snes/target/web
+node scripts/inject-boot.mjs --inject --game cinderwire
+```
 
 ## Deploy (Vercel)
 

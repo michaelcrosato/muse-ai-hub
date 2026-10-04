@@ -213,12 +213,20 @@ describe("per-game injected boot (up to the game handoff)", () => {
       for (const id of ["muse-boot", "mb-log", "mb-bar-fill", "mb-pct", "mb-step", "mb-fail", "mb-report", "mb-copy", "mb-retry"]) {
         assert.ok(attrs.includes(`id="${id}"`), `overlay has #${id}`);
       }
-      const js = /<script>\n([\s\S]*?)\n<\/script>/.exec(body[2]);
-      assert.ok(js, "boot script present");
-      assert.equal(js[1].trim(), BOOT_SRC.trim(), "injected JS is byte-identical to boot source");
-      const css = /<!--MUSE-BOOT-CSS-BEGIN v[^-]*-->\n<style>\n([\s\S]*?)\n<\/style>\n<!--MUSE-BOOT-CSS-END-->/.exec(html);
-      assert.ok(css, "css block present");
-      assert.equal(css[1].trim(), BOOT_CSS.trim(), "injected CSS is byte-identical to boot source");
+      if (game.boot.assets === "shared") {
+        assert.ok(body[2].includes('<script src="../boot/muse-boot.js"></script>'), "shared boot JS referenced");
+        const css = /<!--MUSE-BOOT-CSS-BEGIN v[^-]*-->([\s\S]*?)<!--MUSE-BOOT-CSS-END-->/.exec(html);
+        assert.ok(css?.[1].includes('<link rel="stylesheet" href="../boot/muse-boot.css">'), "shared boot CSS referenced");
+        assert.ok(!body[2].includes(BOOT_SRC.trim()), "boot JS is not duplicated");
+        assert.ok(!css[1].includes(BOOT_CSS.trim()), "boot CSS is not duplicated");
+      } else {
+        const js = /<script>\n([\s\S]*?)\n<\/script>/.exec(body[2]);
+        assert.ok(js, "boot script present");
+        assert.equal(js[1].trim(), BOOT_SRC.trim(), "injected JS is byte-identical to boot source");
+        const css = /<!--MUSE-BOOT-CSS-BEGIN v[^-]*-->\n<style>\n([\s\S]*?)\n<\/style>\n<!--MUSE-BOOT-CSS-END-->/.exec(html);
+        assert.ok(css, "css block present");
+        assert.equal(css[1].trim(), BOOT_CSS.trim(), "injected CSS is byte-identical to boot source");
+      }
       const mod = /<script\s+type="module"[^>]*>([\s\S]*?)<\/script>/i.exec(html);
       assert.ok(mod, "module script present");
       assert.ok(mod[1].trimStart().startsWith("/*MUSE-BOOT-GATE"), "gate is the first module statement");
